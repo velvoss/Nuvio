@@ -340,4 +340,7 @@ internal val SettingsPage.icon: ImageVector
         SettingsPage.Omdb -> Icons.Default.Link
         SettingsPage.LiveTv -> Icons.Default.LiveTv
         SettingsPage.DiscordRpc -> Icons.Default.Link
+        SettingsPage.SubFlow -> Icons.Default.Subtitles
+        SettingsPage.SubFlowWords -> Icons.Default.Favorite
+        SettingsPage.SubFlowReview -> Icons.Default.History
     }

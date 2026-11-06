@@ -39,6 +39,7 @@ import com.nuvio.app.features.subflow.SubFlowLanguages
 import com.nuvio.app.features.subflow.SubFlowRepository
 import com.nuvio.app.features.subflow.SubFlowWordStatus
 import nuvio.composeapp.generated.resources.Res
+import nuvio.composeapp.generated.resources.action_cancel
 import nuvio.composeapp.generated.resources.subflow_language_dialog
 import nuvio.composeapp.generated.resources.subflow_export_copied
 import nuvio.composeapp.generated.resources.subflow_export_description

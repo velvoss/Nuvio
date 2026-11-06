@@ -15,7 +15,7 @@ internal fun PlayerScreenRuntime.fetchAddonSubtitlesForActiveItem() {
     // Without a network the addon lookup can only hang; keep the local state untouched.
     if (isNetworkOffline()) return
     val type = activeAddonSubtitleType.takeIf { it.isNotBlank() } ?: return
-    val videoId = preferredAddonSubtitleVideoId?.takeIf { it.isNotBlank() } ?: return
+    val videoId = activeVideoId?.takeIf { it.isNotBlank() } ?: return
     val extras = activeSubtitleExtras
     // For P2P streams activeSourceUrl is a torrent:// sentinel — the real HTTP URL
     // comes from the local engine once the stream is resolved, mirroring NuvioTV where

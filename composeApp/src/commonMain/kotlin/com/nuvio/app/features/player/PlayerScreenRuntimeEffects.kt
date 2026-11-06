@@ -25,7 +25,6 @@ import com.nuvio.app.features.p2p.P2pStreamRequest
 import com.nuvio.app.features.p2p.P2pStreamingEngine
 import com.nuvio.app.features.p2p.P2pStreamingState
 import com.nuvio.app.features.player.skip.NextEpisodeInfo
-import com.nuvio.app.core.logging.InAppLogger
 import com.nuvio.app.features.player.skip.PlayerNextEpisodeRules
 import com.nuvio.app.features.player.skip.SkipIntroRepository
 import com.nuvio.app.features.player.skip.SkipInterval
@@ -327,28 +326,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         networkCondition,
     ) {
         if (activeSourceUrl.startsWith("file:") && externalSubtitles.isNotEmpty()) return@LaunchedEffect
-        val compatibleFetchKey = addonSubtitleFetchKey
-        val fetchKey = compatibleFetchKey
-            ?: listOfNotNull(activeVideoId, parentMetaId)
-                .joinToString("|")
-                .takeIf { it.isNotBlank() }
-            ?: return@LaunchedEffect
-        if (compatibleFetchKey == null) {
-            val addonSummary = addonsUiState.addons
-                .filter { it.enabled }
-                .joinToString(separator = ";") { addon ->
-                    val manifest = addon.manifest
-                    val resources = manifest?.resources.orEmpty().joinToString(separator = ",") { resource ->
-                        "${resource.name}[${resource.types.joinToString("/")}](${resource.idPrefixes.joinToString("/")})"
-                    }
-                    "${manifest?.name ?: "unknown"}:$resources"
-                }
-            InAppLogger.warn(
-                "Subtitles",
-                "no compatible subtitle addon key type=$activeAddonSubtitleType videoId=$activeVideoId " +
-                    "parent=$parentMetaId addons=$addonSummary",
-            )
-        }
+        val fetchKey = addonSubtitleFetchKey ?: return@LaunchedEffect
         // For P2P streams, wait until the local engine URL is available before
         // triggering the fetch so that hash computation can use the real HTTP URL.
         if (activeTorrentInfoHash != null && p2pResolvedSourceUrl == null) return@LaunchedEffect

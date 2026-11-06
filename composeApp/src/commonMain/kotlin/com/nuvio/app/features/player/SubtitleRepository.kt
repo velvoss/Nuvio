@@ -1,6 +1,5 @@
 package com.nuvio.app.features.player
 
-import com.nuvio.app.core.logging.InAppLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -109,10 +108,6 @@ object SubtitleRepository {
         extras: SubtitleRequestExtras?,
     ) {
         val requests = addonSubtitleRequests(type, videoId, extras)
-        InAppLogger.info(
-            "Subtitles",
-            "fetch type=$type videoId=$videoId hasExtras=${extras?.toPathSegment() != null} requests=${requests.size}",
-        )
         if (requests.isEmpty()) {
             _isLoading.value = false
             return
@@ -126,25 +121,7 @@ object SubtitleRepository {
             }
         }
 
-        if (_addonSubtitles.value.isEmpty() && extras != null) {
-            val fallbackRequests = addonSubtitleRequests(type, videoId, null)
-            if (fallbackRequests.isNotEmpty()) {
-                InAppLogger.info(
-                    "Subtitles",
-                    "retrying without extras type=$type videoId=$videoId requests=${fallbackRequests.size}",
-                )
-                _loadingProgress.value = SubtitleLoadingProgress(total = fallbackRequests.size)
-                loadAddonSubtitles(fallbackRequests) { request, subtitles ->
-                    _addonSubtitles.update { it + subtitles }
-                    _loadingProgress.update { progress ->
-                        progress?.copy(completed = progress.completed + 1, addonName = request.addonName)
-                    }
-                }
-            }
-        }
-
         if (_addonSubtitles.value.isEmpty()) {
-            InAppLogger.warn("Subtitles", "no addon subtitles type=$type videoId=$videoId")
             _error.value = getString(Res.string.compose_player_no_subtitles_found)
         }
         _isLoading.value = false

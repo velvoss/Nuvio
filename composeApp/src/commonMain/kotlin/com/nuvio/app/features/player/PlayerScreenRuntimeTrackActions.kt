@@ -6,28 +6,11 @@ internal val PlayerScreenRuntime.subtitleStyle: SubtitleStyleState
 internal val PlayerScreenRuntime.activeAddonSubtitleType: String
     get() = contentType ?: parentMetaType
 
-private val subtitleImdbIdPattern = Regex("tt\\d{5,}")
-
-internal val PlayerScreenRuntime.subtitleVideoIdCandidates: List<String>
-    get() = buildList {
-        activeVideoId?.trim()?.takeIf { it.isNotEmpty() }?.let(::add)
-        (metaUiState.meta ?: playerMeta)?.imdbId?.trim()?.takeIf { it.isNotEmpty() }?.let(::add)
-        subtitleImdbIdPattern.find(parentMetaId)?.value?.let(::add)
-    }.distinct()
-
-internal val PlayerScreenRuntime.preferredAddonSubtitleVideoId: String?
-    get() {
-        val type = activeAddonSubtitleType
-        return subtitleVideoIdCandidates.firstOrNull { candidate ->
-            addonSubtitleRequests(type, candidate, null).isNotEmpty()
-        } ?: activeVideoId
-    }
-
 internal val PlayerScreenRuntime.addonSubtitleFetchKey: String?
     get() = buildAddonSubtitleFetchKey(
         addons = addonsUiState.addons,
         type = activeAddonSubtitleType,
-        videoId = preferredAddonSubtitleVideoId,
+        videoId = activeVideoId,
     )
 
 internal val PlayerScreenRuntime.visibleAddonSubtitles: List<AddonSubtitle>

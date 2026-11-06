@@ -2,6 +2,7 @@
 
 package com.nuvio.app.features.player
 
+import com.nuvio.app.features.subflow.SubFlowRepository
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,7 +21,7 @@ internal class SubtitleCuePresenter(private val style: () -> SubtitleStyleState)
     }
 
     fun refresh(): List<Cue> {
-        if (!canStyle || !style().usesStyledOverlay) {
+        if (!canStyle || !(style().usesStyledOverlay || SubFlowRepository.enabledNow)) {
             text = ""
             return cues
         }

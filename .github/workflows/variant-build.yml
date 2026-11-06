@@ -1,0 +1,50 @@
+name: Build Variant
+
+on:
+  push:
+    branches:
+      - 'variant/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: variant-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Build Android debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Compute artifact name
+        id: artifact
+        run: echo "name=nuvio-${GITHUB_REF_NAME//\//-}-debug" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Set up Rust
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+          cargo install cargo-ndk --locked
+
+      - name: Build debug APK
+        run: ./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full --stacktrace
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: androidApp/build/outputs/apk/full/debug/*.apk
+          if-no-files-found: error

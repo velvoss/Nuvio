@@ -1,6 +1,7 @@
 package com.nuvio.app.features.player
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -20,11 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +40,11 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nuvio.app.features.subflow.SubFlowPreferences
+import com.nuvio.app.features.subflow.SubFlowRepository
+import com.nuvio.app.features.subflow.SubFlowText
+import com.nuvio.app.features.subflow.SubFlowWordEntry
+import com.nuvio.app.features.subflow.SubFlowWordStatus
 import kotlin.math.sqrt
 
 @Composable
@@ -44,6 +55,11 @@ internal fun StyledSubtitleOverlay(
     videoAspectRatio: Float = 0f,
     videoResizeMode: PlayerResizeMode = PlayerResizeMode.Fit,
 ) {
+    SubFlowRepository.ensureLoaded()
+    val subFlowPreferences by SubFlowRepository.preferences.collectAsState()
+    val subFlowWords by SubFlowRepository.words.collectAsState()
+    val wordTapHandler: ((String, String) -> Unit)? =
+        if (subFlowPreferences.enabled) SubFlowRepository::selectWord else null
     val fontFamily = rememberSubtitleFontFamily(style.appearance.fontId)
     if (text.isBlank()) return
     val density = LocalDensity.current
@@ -71,6 +87,9 @@ internal fun StyledSubtitleOverlay(
                 videoWidthPx = fittedVideoBounds.width,
                 videoHeightPx = fittedVideoBounds.height,
                 fontFamily = fontFamily,
+                onSubFlowWordTap = wordTapHandler,
+                subFlowPreferences = subFlowPreferences.takeIf { it.enabled },
+                subFlowWords = subFlowWords,
             )
         }
     }
@@ -85,6 +104,9 @@ internal fun StyledSubtitleText(
     videoWidthPx: Float = SUBTITLE_BLUR_REFERENCE_WIDTH_PX,
     videoHeightPx: Float = SUBTITLE_BLUR_REFERENCE_HEIGHT_PX,
     fontFamily: FontFamily = rememberSubtitleFontFamily(style.appearance.fontId),
+    onSubFlowWordTap: ((word: String, line: String) -> Unit)? = null,
+    subFlowPreferences: SubFlowPreferences? = null,
+    subFlowWords: Map<String, SubFlowWordEntry> = emptyMap(),
 ) {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
@@ -114,9 +136,33 @@ internal fun StyledSubtitleText(
         val edgePadding = with(density) { edgePaddingPx.toDp() }
 
         val availableTextWidth = (availableWidth - paddingX * 2).coerceAtLeast(1f).toInt()
+        val annotatedText = remember(text, subFlowPreferences, subFlowWords) {
+            if (subFlowPreferences == null) {
+                AnnotatedString(text)
+            } else {
+                val newColor = parseSubFlowColor(subFlowPreferences.newWordColor, Color(0xFFFFD65E))
+                val learningColor = parseSubFlowColor(subFlowPreferences.learningWordColor, Color(0xFF5CC8F5))
+                buildAnnotatedString {
+                    append(text)
+                    SubFlowText.wordRanges(text).forEach { range ->
+                        val status = subFlowWords[text.substring(range.first, range.last + 1).lowercase()]?.status
+                            ?: SubFlowWordStatus.New
+                        val wordColor = when (status) {
+                            SubFlowWordStatus.New -> newColor
+                            SubFlowWordStatus.Learning -> learningColor
+                            else -> null
+                        }
+                        if (wordColor != null) {
+                            addStyle(SpanStyle(color = wordColor), range.first, range.last + 1)
+                        }
+                    }
+                }
+            }
+        }
         val layout = measurer.measure(
-            text = AnnotatedString(text),
+            text = annotatedText,
             style = TextStyle(
+                color = style.textColor,
                 fontFamily = fontFamily,
                 fontSize = (style.fontSizeSp * scale).sp,
                 fontWeight = if (style.bold) FontWeight.Bold else FontWeight.Normal,
@@ -137,10 +183,28 @@ internal fun StyledSubtitleText(
         val radius = with(density) { (style.appearance.backgroundRadius.dp * scale).toPx() }
         val shadowSize = with(density) { (style.appearance.shadowSize.dp * scale).toPx() }
 
+        val subFlowTapModifier = if (onSubFlowWordTap != null) {
+            Modifier.pointerInput(text, layout, edgePaddingPx, paddingX, paddingY) {
+                detectTapGestures { position ->
+                    val textX = position.x - edgePaddingPx - paddingX
+                    val textY = position.y - paddingY - edgePaddingPx
+                    if (textX < 0f || textY < 0f) return@detectTapGestures
+                    if (textX > layout.size.width.toFloat() || textY > layout.size.height.toFloat()) return@detectTapGestures
+                    val textOffset = layout.getOffsetForPosition(Offset(textX, textY))
+                    SubFlowText.wordAt(text, textOffset)?.let { hit ->
+                        onSubFlowWordTap.invoke(hit.word, hit.line)
+                    }
+                }
+            }
+        } else {
+            Modifier
+        }
+
         Box(
             Modifier.requiredWidth(boxWidth)
                 .height(contentHeight + edgePadding * 2)
                 .offset(x = left, y = edgePadding)
+                .then(subFlowTapModifier)
                 .semantics { this.text = AnnotatedString(text) },
         ) {
             Canvas(Modifier.fillMaxSize()) {
@@ -210,7 +274,7 @@ internal fun StyledSubtitleText(
             Canvas(Modifier.fillMaxSize()) {
                 drawText(
                     layout,
-                    color = style.textColor,
+                    color = if (subFlowPreferences != null) Color.Unspecified else style.textColor,
                     topLeft = origin,
                     drawStyle = Fill,
                     shadow = if (style.appearance.shadowEnabled) {

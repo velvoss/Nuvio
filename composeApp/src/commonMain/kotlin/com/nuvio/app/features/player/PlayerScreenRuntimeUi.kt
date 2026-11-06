@@ -398,6 +398,14 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi(
             folded = fold != null,
             modifier = panelModifier,
         )
+        if (!isInPip) {
+            SubFlowWordCardOverlay(
+                isPlaying = playbackSnapshot.isPlaying,
+                onPause = { playerController?.pause() },
+                onResume = { playerController?.play() },
+                modifier = videoModifier,
+            )
+        }
         Box(modifier = videoModifier) {
             RenderPlaybackOverlays(
                 runtime = runtime,

@@ -2520,4 +2520,37 @@
     <string name="subtitle_shadow_opacity">عتامة الظل</string>
     <string name="subtitle_shadow_size">حجم الظل</string>
     <string name="subtitle_reset_appearance">إعادة ضبط المظهر</string>
+
+    <string name="subflow_title">SubFlow</string>
+    <string name="subflow_root_description">حوّل الترجمة إلى أداة لتعلّم اللغات.</string>
+    <string name="subflow_settings_enable">تفعيل داخل المشغّل</string>
+    <string name="subflow_settings_enable_description">انقر أي كلمة في الترجمة لترجمتها وسماعها وحفظها.</string>
+    <string name="subflow_settings_target_language">لغة الترجمة</string>
+    <string name="subflow_settings_auto_speak">نطق الكلمة تلقائياً</string>
+    <string name="subflow_settings_translate_sentence">ترجمة الجملة كاملة</string>
+    <string name="subflow_settings_dictionary">البحث في القاموس</string>
+    <string name="subflow_settings_dictionary_description">إظهار الرمز الصوتي ونوع الكلمة وتعريف إنجليزي.</string>
+    <string name="subflow_settings_speech_rate">سرعة النطق</string>
+    <string name="subflow_settings_new_color">لون الكلمات الجديدة</string>
+    <string name="subflow_settings_learning_color">لون كلمات «أتعلمها»</string>
+    <string name="subflow_settings_saved_words">الكلمات المحفوظة</string>
+    <string name="subflow_settings_saved_words_value">%1$d محفوظة · %2$d قيد التعلّم</string>
+    <string name="subflow_settings_clear_words">مسح الكلمات المحفوظة</string>
+    <string name="subflow_settings_clear_title">مسح الكلمات المحفوظة؟</string>
+    <string name="subflow_settings_clear_message">لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="subflow_settings_clear_action">مسح</string>
+    <string name="subflow_settings_about">حول SubFlow</string>
+    <string name="subflow_settings_about_description">تعلّم اللغات من أي ترجمة. تبقى بيانات الكلمات على هذا الجهاز.</string>
+    <string name="subflow_status_new">جديدة</string>
+    <string name="subflow_status_learning">أتعلمها</string>
+    <string name="subflow_status_known">أعرفها</string>
+    <string name="subflow_card_learning">أتعلمها</string>
+    <string name="subflow_card_known">أعرفها</string>
+    <string name="subflow_card_close">إغلاق</string>
+    <string name="subflow_card_no_meaning">لا يوجد معنى متاح</string>
+    <string name="subflow_card_context">في هذا المشهد</string>
+    <string name="subflow_card_definition">التعريف</string>
+    <string name="subflow_speak_word">نطق الكلمة</string>
+    <string name="subflow_speak_meaning">نطق الترجمة</string>
+    <string name="subflow_language_dialog">لغة الترجمة</string>
 </resources>

@@ -3087,4 +3087,37 @@
     <string name="settings_glass_ui_style_dark">Dark</string>
     <string name="settings_glass_ui_style_balanced">Balanced</string>
     <string name="settings_glass_ui_style_vivid">Vivid</string>
+
+    <string name="subflow_title">SubFlow</string>
+    <string name="subflow_root_description">Turn subtitles into a language-learning tool.</string>
+    <string name="subflow_settings_enable">Enable in player</string>
+    <string name="subflow_settings_enable_description">Tap any word in the subtitle to translate it, hear it and save it.</string>
+    <string name="subflow_settings_target_language">Translation language</string>
+    <string name="subflow_settings_auto_speak">Speak the word automatically</string>
+    <string name="subflow_settings_translate_sentence">Translate the full sentence</string>
+    <string name="subflow_settings_dictionary">Dictionary lookup</string>
+    <string name="subflow_settings_dictionary_description">Show phonetics, part of speech and an English definition.</string>
+    <string name="subflow_settings_speech_rate">Speech rate</string>
+    <string name="subflow_settings_new_color">New word color</string>
+    <string name="subflow_settings_learning_color">Learning word color</string>
+    <string name="subflow_settings_saved_words">Saved words</string>
+    <string name="subflow_settings_saved_words_value">%1$d saved · %2$d learning</string>
+    <string name="subflow_settings_clear_words">Clear saved words</string>
+    <string name="subflow_settings_clear_title">Clear saved words?</string>
+    <string name="subflow_settings_clear_message">This cannot be undone.</string>
+    <string name="subflow_settings_clear_action">Clear</string>
+    <string name="subflow_settings_about">About SubFlow</string>
+    <string name="subflow_settings_about_description">Learn languages from any subtitle. Word data stays on this device.</string>
+    <string name="subflow_status_new">New</string>
+    <string name="subflow_status_learning">Learning</string>
+    <string name="subflow_status_known">Known</string>
+    <string name="subflow_card_learning">Learning</string>
+    <string name="subflow_card_known">I know it</string>
+    <string name="subflow_card_close">Close</string>
+    <string name="subflow_card_no_meaning">No meaning available</string>
+    <string name="subflow_card_context">In this scene</string>
+    <string name="subflow_card_definition">Definition</string>
+    <string name="subflow_speak_word">Speak word</string>
+    <string name="subflow_speak_meaning">Speak translation</string>
+    <string name="subflow_language_dialog">Translation language</string>
 </resources>

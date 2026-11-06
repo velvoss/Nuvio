@@ -289,6 +289,12 @@ internal fun settingsSearchEntries(
         description = stringResource(Res.string.settings_playback_subtitle),
     )
     addPage(
+        page = SettingsPage.SubFlow,
+        key = "subflow",
+        title = pageTitles.getValue(SettingsPage.SubFlow),
+        description = stringResource(Res.string.subflow_root_description),
+    )
+    addPage(
         page = SettingsPage.Streams,
         key = "streams",
         title = streamsPage,

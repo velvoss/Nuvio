@@ -102,6 +102,13 @@ internal fun LazyListScope.settingsRootContent(
                             isTablet = isTablet,
                             onPageClick = onPageClick,
                         )
+                        SettingsGroupDivider(isTablet = isTablet)
+                        SettingsPageRow(
+                            page = SettingsPage.SubFlow,
+                            description = Res.string.subflow_root_description,
+                            isTablet = isTablet,
+                            onPageClick = onPageClick,
+                        )
                     }
                     SettingsCategory.Services -> {
                         SettingsPageRow(

@@ -8,6 +8,7 @@ import com.nuvio.app.core.ui.NuvioToastController
 import com.nuvio.app.features.party.PartyRepository
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuvio.app.features.shuffle.EpisodeShuffleRepository
+import com.nuvio.app.features.subflow.SubFlowRepository
 import com.nuvio.app.features.shuffle.ShuffleSurface
 import com.nuvio.app.features.shuffle.watchedShuffleEpisodes
 import com.nuvio.app.features.shuffle.shuffleEpisodeProgress
@@ -78,6 +79,8 @@ private fun rememberNetworkCondition(): NetworkCondition {
 
 @Composable
 internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
+    SubFlowRepository.ensureLoaded()
+    val subFlowPreferences by SubFlowRepository.preferences.collectAsStateWithLifecycle()
     val networkCondition = rememberNetworkCondition()
     val currentFeedback = liveGestureFeedback ?: gestureFeedback
     LaunchedEffect(currentFeedback) {
@@ -246,7 +249,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         subtitleAutoSyncState = SubtitleAutoSyncUiState()
     }
 
-    LaunchedEffect(playerController, subtitleStyle) {
+    LaunchedEffect(playerController, subtitleStyle, subFlowPreferences.enabled) {
         playerController?.applySubtitleStyle(subtitleStyle)
     }
 

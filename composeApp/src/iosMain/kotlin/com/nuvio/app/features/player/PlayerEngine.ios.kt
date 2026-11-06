@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.logging.InAppLogger
+import com.nuvio.app.features.subflow.SubFlowRepository
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.delay
@@ -375,7 +376,7 @@ actual fun PlatformPlayerSurface(
                     fontSize = style.toMpvSubtitleFontSize(),
                     subPos = style.toMpvSubtitlePosition(),
                     stripSdh = style.stripSdh,
-                    styledOverlay = style.requiresComposeStyledOverlay,
+                    styledOverlay = style.requiresComposeStyledOverlay || SubFlowRepository.enabledNow,
                     outlineBlur = style.mpvNativeOutlineBlurLevel,
                 )
             }

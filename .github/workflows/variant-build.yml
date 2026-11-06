@@ -115,6 +115,21 @@ jobs:
             printf 'CONTRIBUTIONS_URL=%s\n' "${CONTRIBUTIONS_URL}" >> local.properties
           fi
 
+      - name: Write default runtime properties
+        if: env.RELEASE_PROPERTIES_BASE64 == ''
+        run: |
+          cat > local.properties <<'EOF'
+          NUVIO_SUPABASE_URL=https://api.nuvio.tv
+          NUVIO_SUPABASE_ANON_KEY=sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN
+          TMDB_API_KEY=bb9ac23bef777156cd422ab4b801ac4d
+          INTRODB_API_URL=https://api.introdb.app
+          DONATIONS_BASE_URL=https://nuvio.tv/support
+          EOF
+          if [[ -n "${CONTRIBUTIONS_URL}" ]]; then
+            printf 'CONTRIBUTIONS_URL=%s\n' "${CONTRIBUTIONS_URL}" >> local.properties
+          fi
+          sed -E 's/^([^=]+)=.*/\1=***/' local.properties
+
       - name: Constrain Gradle memory for the hosted runner
         run: |
           gradle_user_home="${GRADLE_USER_HOME:-${HOME}/.gradle}"

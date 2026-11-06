@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.DialogButton
@@ -37,6 +40,16 @@ import com.nuvio.app.features.subflow.SubFlowRepository
 import com.nuvio.app.features.subflow.SubFlowWordStatus
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.subflow_language_dialog
+import nuvio.composeapp.generated.resources.subflow_export_copied
+import nuvio.composeapp.generated.resources.subflow_export_description
+import nuvio.composeapp.generated.resources.subflow_export_title
+import nuvio.composeapp.generated.resources.subflow_import_description
+import nuvio.composeapp.generated.resources.subflow_import_empty
+import nuvio.composeapp.generated.resources.subflow_import_failed
+import nuvio.composeapp.generated.resources.subflow_import_success
+import nuvio.composeapp.generated.resources.subflow_import_title
+import nuvio.composeapp.generated.resources.subflow_review_description
+import nuvio.composeapp.generated.resources.subflow_review_title
 import nuvio.composeapp.generated.resources.subflow_settings_about
 import nuvio.composeapp.generated.resources.subflow_settings_about_description
 import nuvio.composeapp.generated.resources.subflow_settings_auto_speak
@@ -56,19 +69,38 @@ import nuvio.composeapp.generated.resources.subflow_settings_speech_rate
 import nuvio.composeapp.generated.resources.subflow_settings_target_language
 import nuvio.composeapp.generated.resources.subflow_settings_translate_sentence
 import nuvio.composeapp.generated.resources.subflow_title
+import nuvio.composeapp.generated.resources.subflow_words_title
 import org.jetbrains.compose.resources.stringResource
 
 private val newWordColorChoices = listOf("#FFD65E", "#FF9F43", "#FF6B6B", "#F368E0")
 private val learningWordColorChoices = listOf("#5CC8F5", "#54A0FF", "#4DD18C", "#A55EEA")
 
+internal fun LazyListScope.subFlowSettingsContent(
+    isTablet: Boolean,
+    onPageChange: (SettingsPage) -> Unit,
+) {
+    item {
+        SubFlowSettingsBody(isTablet = isTablet, onPageChange = onPageChange)
+    }
+}
+
 @Composable
-internal fun subFlowSettingsContent(isTablet: Boolean) {
+private fun SubFlowSettingsBody(
+    isTablet: Boolean,
+    onPageChange: (SettingsPage) -> Unit,
+) {
     SubFlowRepository.ensureLoaded()
     val preferences by SubFlowRepository.preferences.collectAsState()
     val words by SubFlowRepository.words.collectAsState()
+    val clipboard = LocalClipboardManager.current
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
+    var feedback by remember { mutableStateOf<String?>(null) }
     val learningCount = words.values.count { it.status == SubFlowWordStatus.Learning }
+    val exportCopiedMessage = stringResource(Res.string.subflow_export_copied)
+    val importEmptyMessage = stringResource(Res.string.subflow_import_empty)
+    val importSuccessMessage = stringResource(Res.string.subflow_import_success)
+    val importFailedMessage = stringResource(Res.string.subflow_import_failed)
 
     Column(verticalArrangement = Arrangement.spacedBy(if (isTablet) 18.dp else 12.dp)) {
         SettingsSection(title = stringResource(Res.string.subflow_title), isTablet = isTablet) {
@@ -148,14 +180,47 @@ internal fun subFlowSettingsContent(isTablet: Boolean) {
 
         SettingsSection(title = stringResource(Res.string.subflow_settings_saved_words), isTablet = isTablet) {
             SettingsGroup(isTablet = isTablet) {
-                SubFlowInfoRow(
-                    title = stringResource(Res.string.subflow_settings_saved_words),
-                    value = stringResource(
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.subflow_words_title),
+                    description = stringResource(
                         Res.string.subflow_settings_saved_words_value,
                         words.size,
                         learningCount,
                     ),
                     isTablet = isTablet,
+                    onClick = { onPageChange(SettingsPage.SubFlowWords) },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.subflow_review_title),
+                    description = stringResource(Res.string.subflow_review_description),
+                    isTablet = isTablet,
+                    onClick = { onPageChange(SettingsPage.SubFlowReview) },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.subflow_export_title),
+                    description = stringResource(Res.string.subflow_export_description),
+                    enabled = words.isNotEmpty(),
+                    isTablet = isTablet,
+                    onClick = {
+                        clipboard.setText(AnnotatedString(SubFlowRepository.exportJson()))
+                        feedback = exportCopiedMessage
+                    },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.subflow_import_title),
+                    description = stringResource(Res.string.subflow_import_description),
+                    isTablet = isTablet,
+                    onClick = {
+                        val clipboardText = clipboard.getText()?.text
+                        feedback = when {
+                            clipboardText.isNullOrBlank() -> importEmptyMessage
+                            SubFlowRepository.importJson(clipboardText) -> importSuccessMessage
+                            else -> importFailedMessage
+                        }
+                    },
                 )
                 SettingsGroupDivider(isTablet = isTablet)
                 SettingsClickableRow(
@@ -163,6 +228,17 @@ internal fun subFlowSettingsContent(isTablet: Boolean) {
                     enabled = words.isNotEmpty(),
                     isTablet = isTablet,
                     onClick = { showClearDialog = true },
+                )
+            }
+            feedback?.let { message ->
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(
+                        horizontal = if (isTablet) 20.dp else 16.dp,
+                        vertical = 6.dp,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }

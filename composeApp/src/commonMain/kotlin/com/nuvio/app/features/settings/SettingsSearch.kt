@@ -295,6 +295,18 @@ internal fun settingsSearchEntries(
         description = stringResource(Res.string.subflow_root_description),
     )
     addPage(
+        page = SettingsPage.SubFlowWords,
+        key = "subflow-words",
+        title = pageTitles.getValue(SettingsPage.SubFlowWords),
+        description = stringResource(Res.string.subflow_words_description),
+    )
+    addPage(
+        page = SettingsPage.SubFlowReview,
+        key = "subflow-review",
+        title = pageTitles.getValue(SettingsPage.SubFlowReview),
+        description = stringResource(Res.string.subflow_review_description),
+    )
+    addPage(
         page = SettingsPage.Streams,
         key = "streams",
         title = streamsPage,

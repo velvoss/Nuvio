@@ -740,6 +740,13 @@ private fun MobileSettingsScreen(
                 )
                 SettingsPage.SubFlow -> subFlowSettingsContent(
                     isTablet = false,
+                    onPageChange = onPageChange,
+                )
+                SettingsPage.SubFlowWords -> subFlowWordsContent(
+                    isTablet = false,
+                )
+                SettingsPage.SubFlowReview -> subFlowReviewContent(
+                    isTablet = false,
                 )
                 SettingsPage.Streams -> streamsSettingsContent(
                     isTablet = false,
@@ -1200,6 +1207,13 @@ private fun TabletSettingsScreen(
                         onPageChange = ::openInlinePage,
                     )
                     SettingsPage.SubFlow -> subFlowSettingsContent(
+                        isTablet = true,
+                        onPageChange = ::openInlinePage,
+                    )
+                    SettingsPage.SubFlowWords -> subFlowWordsContent(
+                        isTablet = true,
+                    )
+                    SettingsPage.SubFlowReview -> subFlowReviewContent(
                         isTablet = true,
                     )
                     SettingsPage.Streams -> streamsSettingsContent(

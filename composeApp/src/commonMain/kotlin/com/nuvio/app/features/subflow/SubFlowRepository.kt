@@ -165,6 +165,10 @@ object SubFlowRepository {
         speakWord(selection.word)
     }
 
+    fun speakWordByText(word: String) {
+        speakWord(word.trim())
+    }
+
     private fun speakWord(word: String) {
         val rate = _preferences.value.speechRate.coerceIn(20, 100) / 100f
         SubFlowSpeech.speak(word, detectSpeechTag(word), rate)
@@ -198,6 +202,61 @@ object SubFlowRepository {
         persistWords()
         _selection.value = null
         SubFlowSpeech.stop()
+    }
+
+    fun setWordStatus(word: String, status: SubFlowWordStatus) {
+        val key = word.trim().lowercase()
+        if (key.isEmpty()) return
+        val existing = _words.value[key] ?: return
+        _words.value = _words.value + (
+            key to existing.copy(
+                word = existing.word.ifBlank { word },
+                status = status,
+            )
+        )
+        persistWords()
+    }
+
+    fun markReviewed(word: String) {
+        val key = word.trim().lowercase()
+        if (key.isEmpty()) return
+        val existing = _words.value[key] ?: return
+        val now = Clock.System.now().toEpochMilliseconds()
+        _words.value = _words.value + (
+            key to existing.copy(
+                reviewCount = existing.reviewCount + 1,
+                lastReviewedEpochMs = now,
+            )
+        )
+        persistWords()
+    }
+
+    fun reviewQueue(): List<SubFlowWordEntry> {
+        ensureLoaded()
+        return _words.value.values
+            .filter { it.status == SubFlowWordStatus.Learning }
+            .sortedWith(
+                compareBy(
+                    { it.lastReviewedEpochMs ?: 0L },
+                    { it.word.lowercase() },
+                )
+            )
+    }
+
+    fun exportJson(): String {
+        ensureLoaded()
+        return json.encodeToString(_words.value)
+    }
+
+    fun importJson(text: String): Boolean {
+        ensureLoaded()
+        val imported = runCatching {
+            json.decodeFromString<Map<String, SubFlowWordEntry>>(text.trim())
+        }.getOrNull() ?: return false
+        if (imported.isEmpty()) return false
+        _words.value = _words.value + imported
+        persistWords()
+        return true
     }
 
     fun removeWord(word: String) {

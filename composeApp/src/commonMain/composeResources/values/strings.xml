@@ -3120,4 +3120,33 @@
     <string name="subflow_speak_word">Speak word</string>
     <string name="subflow_speak_meaning">Speak translation</string>
     <string name="subflow_language_dialog">Translation language</string>
+
+    <string name="subflow_words_title">Saved words</string>
+    <string name="subflow_words_description">Search, filter and manage the words you kept from subtitles.</string>
+    <string name="subflow_words_search">Search words</string>
+    <string name="subflow_words_empty">No saved words yet. Tap a word in the player to add one.</string>
+    <string name="subflow_words_no_results">No words match your search.</string>
+    <string name="subflow_words_filter_all">All</string>
+    <string name="subflow_words_filter_new">New</string>
+    <string name="subflow_words_filter_learning">Learning</string>
+    <string name="subflow_words_filter_known">Known</string>
+    <string name="subflow_words_delete">Delete word</string>
+    <string name="subflow_words_status">Status</string>
+    <string name="subflow_words_details">Word details</string>
+    <string name="subflow_review_title">Quick review</string>
+    <string name="subflow_review_description">Review your learning words with flashcards.</string>
+    <string name="subflow_review_empty">Add words while watching to start reviewing.</string>
+    <string name="subflow_review_progress">%1$d of %2$d</string>
+    <string name="subflow_review_reveal">Show meaning</string>
+    <string name="subflow_review_no_meaning">No meaning saved</string>
+    <string name="subflow_review_done">Review complete</string>
+    <string name="subflow_review_restart">Start again</string>
+    <string name="subflow_export_title">Export words</string>
+    <string name="subflow_export_description">Copy a JSON backup to the clipboard.</string>
+    <string name="subflow_import_title">Import words</string>
+    <string name="subflow_import_description">Merge a JSON backup from the clipboard.</string>
+    <string name="subflow_export_copied">Copied to clipboard</string>
+    <string name="subflow_import_success">Words imported</string>
+    <string name="subflow_import_failed">No valid JSON found in the clipboard</string>
+    <string name="subflow_import_empty">Clipboard is empty</string>
 </resources>

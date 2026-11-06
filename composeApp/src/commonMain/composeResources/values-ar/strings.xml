@@ -2553,4 +2553,33 @@
     <string name="subflow_speak_word">نطق الكلمة</string>
     <string name="subflow_speak_meaning">نطق الترجمة</string>
     <string name="subflow_language_dialog">لغة الترجمة</string>
+
+    <string name="subflow_words_title">الكلمات المحفوظة</string>
+    <string name="subflow_words_description">ابحث وصفِّ وأدر الكلمات التي حفظتها من الترجمات.</string>
+    <string name="subflow_words_search">البحث في الكلمات</string>
+    <string name="subflow_words_empty">لا توجد كلمات محفوظة بعد. انقر كلمة داخل المشغّل لإضافتها.</string>
+    <string name="subflow_words_no_results">لا توجد كلمات تطابق بحثك.</string>
+    <string name="subflow_words_filter_all">الكل</string>
+    <string name="subflow_words_filter_new">جديدة</string>
+    <string name="subflow_words_filter_learning">أتعلمها</string>
+    <string name="subflow_words_filter_known">أعرفها</string>
+    <string name="subflow_words_delete">حذف الكلمة</string>
+    <string name="subflow_words_status">الحالة</string>
+    <string name="subflow_words_details">تفاصيل الكلمة</string>
+    <string name="subflow_review_title">مراجعة سريعة</string>
+    <string name="subflow_review_description">راجع كلماتك قيد التعلّم ببطاقات تعليمية.</string>
+    <string name="subflow_review_empty">أضف كلمات أثناء المشاهدة لتبدأ المراجعة.</string>
+    <string name="subflow_review_progress">%1$d من %2$d</string>
+    <string name="subflow_review_reveal">إظهار المعنى</string>
+    <string name="subflow_review_no_meaning">لا يوجد معنى محفوظ</string>
+    <string name="subflow_review_done">اكتملت المراجعة</string>
+    <string name="subflow_review_restart">البدء من جديد</string>
+    <string name="subflow_export_title">تصدير الكلمات</string>
+    <string name="subflow_export_description">انسخ نسخة احتياطية بصيغة JSON إلى الحافظة.</string>
+    <string name="subflow_import_title">استيراد الكلمات</string>
+    <string name="subflow_import_description">ادمج نسخة احتياطية بصيغة JSON من الحافظة.</string>
+    <string name="subflow_export_copied">تم النسخ إلى الحافظة</string>
+    <string name="subflow_import_success">تم استيراد الكلمات</string>
+    <string name="subflow_import_failed">لا يوجد JSON صالح في الحافظة</string>
+    <string name="subflow_import_empty">الحافظة فارغة</string>
 </resources>

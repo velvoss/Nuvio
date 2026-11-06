@@ -107,6 +107,16 @@ internal enum class SettingsPage(
         category = SettingsCategory.Watch,
         parentPage = Root,
     ),
+    SubFlowWords(
+        titleRes = Res.string.subflow_words_title,
+        category = SettingsCategory.Watch,
+        parentPage = SubFlow,
+    ),
+    SubFlowReview(
+        titleRes = Res.string.subflow_review_title,
+        category = SettingsCategory.Watch,
+        parentPage = SubFlow,
+    ),
     PlaybackPlayer(
         titleRes = Res.string.settings_playback_page_player,
         category = SettingsCategory.Watch,

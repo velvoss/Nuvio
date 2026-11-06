@@ -5,6 +5,16 @@ on:
     branches:
       - 'variant/**'
   workflow_dispatch:
+    inputs:
+      target:
+        description: Choose which platform to build
+        required: true
+        type: choice
+        options:
+          - ios-only
+          - android-only
+          - all
+        default: ios-only
 
 permissions:
   contents: read
@@ -16,6 +26,7 @@ concurrency:
 jobs:
   android:
     name: Build Android debug APK
+    if: github.event_name == 'workflow_dispatch' && (inputs.target == 'android-only' || inputs.target == 'all')
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -50,13 +61,15 @@ jobs:
           if-no-files-found: error
 
   ios:
-    name: Build iOS debug IPA
+    name: Build iOS unsigned IPA
+    if: github.event_name == 'push' || inputs.target == 'ios-only' || inputs.target == 'all'
     runs-on: ${{ vars.IOS_RUNNER_LABEL || 'xcode-27' }}
-    timeout-minutes: 60
+    timeout-minutes: 180
     env:
       DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_27.1.app/Contents/Developer' }}
       GRADLE_OPTS: -Dfile.encoding=UTF-8
-      IOS_CONFIGURATION: Debug
+      IOS_CONFIGURATION: Release
+      NUVIO_IOS_DISTRIBUTION: full
       NUVIO_IOS_PHASE_PROFILE: skip-both
       KOTLIN_DAEMON_JVMARGS: -Xmx1024M
       NUVIO_GRADLE_JVMARGS: -Xmx2048M -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=768M -XX:+UseG1GC
@@ -69,7 +82,7 @@ jobs:
 
       - name: Compute artifact name
         id: artifact
-        run: echo "name=nuvio-${GITHUB_REF_NAME//\//-}-ios-debug" >> "${GITHUB_OUTPUT}"
+        run: echo "name=nuvio-${GITHUB_REF_NAME//\//-}-ios-release" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -113,18 +126,27 @@ jobs:
             echo "org.gradle.parallel=false"
             echo "org.gradle.workers.max=1"
             echo "kotlin.native.disableCompilerDaemon=true"
+            case "${NUVIO_IOS_PHASE_PROFILE:-skip-both}" in
+              full) NUVIO_IOS_DISABLE_PHASES="" ;;
+              skip-static-init) NUVIO_IOS_DISABLE_PHASES="RemoveRedundantCallsToStaticInitializersPhase" ;;
+              skip-devirtualization) NUVIO_IOS_DISABLE_PHASES="DevirtualizationAnalysis,Devirtualization" ;;
+              *) NUVIO_IOS_DISABLE_PHASES="DevirtualizationAnalysis,Devirtualization,RemoveRedundantCallsToStaticInitializersPhase" ;;
+            esac
+            if [ -n "${NUVIO_IOS_DISABLE_PHASES}" ]; then
+              echo "nuvio.ios.releaseDisablePhases=${NUVIO_IOS_DISABLE_PHASES}"
+            fi
           } >> "${gradle_user_home}/gradle.properties"
           cat "${gradle_user_home}/gradle.properties"
 
       - name: Prepare iOS dependencies
         run: ./scripts/prepare-ios-dependencies.sh
 
-      - name: Build unsigned full Debug IPA
+      - name: Build unsigned full Release IPA
         run: ./scripts/build-ios-ipa.sh
 
       - name: Summarize IPA
         run: |
-          ipa_path="$(find build/ios-ipa -maxdepth 1 -type f -name '*-debug.ipa' -print -quit)"
+          ipa_path="$(find build/ios-ipa -maxdepth 1 -type f -name '*-release.ipa' -print -quit)"
           if [[ -z "${ipa_path}" ]]; then
             echo "No IPA was produced." >&2
             exit 1
@@ -135,7 +157,7 @@ jobs:
             echo "- File: $(basename "${ipa_path}")"
             echo "- Size: $(du -h "${ipa_path}" | cut -f1)"
             echo "- SHA-256: $(shasum -a 256 "${ipa_path}" | awk '{print $1}')"
-            echo "- Configuration: Debug"
+            echo "- Configuration: Release"
             echo "- Signing: unsigned"
           } >> "${GITHUB_STEP_SUMMARY}"
 

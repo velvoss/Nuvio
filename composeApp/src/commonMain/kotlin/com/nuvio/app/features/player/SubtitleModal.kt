@@ -136,6 +136,14 @@ fun SubtitleModal(
     val optionsListState = rememberLazyListState()
     val styleVisible = activeLanguageKey != SubtitleOffLanguageKey &&
         selectedOptionId != null && options.any { it.id == selectedOptionId }
+    var requestedFetchOnOpen by remember(visible) { mutableStateOf(false) }
+
+    LaunchedEffect(visible, addonSubtitles.isEmpty(), isLoadingAddonSubtitles) {
+        if (visible && !requestedFetchOnOpen && addonSubtitles.isEmpty() && !isLoadingAddonSubtitles) {
+            requestedFetchOnOpen = true
+            onFetchAddonSubtitles()
+        }
+    }
 
     LaunchedEffect(visible) {
         if (!visible) return@LaunchedEffect

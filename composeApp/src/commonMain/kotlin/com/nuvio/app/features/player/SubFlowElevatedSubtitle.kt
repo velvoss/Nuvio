@@ -2,9 +2,11 @@ package com.nuvio.app.features.player
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -56,11 +58,16 @@ internal fun SubFlowElevatedSubtitleBar(
         color = background,
         shape = RoundedCornerShape(16.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
+        BoxWithConstraints {
+            val controlsWidth = (if (preferences.showNavigation) 68.dp else 0.dp) +
+                (if (preferences.showSentenceSpeaker) 34.dp else 0.dp) +
+                8.dp
+            val textMaxWidth = (maxWidth - controlsWidth).coerceAtLeast(96.dp)
+            Row(
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
             if (preferences.showNavigation) {
                 IconButton(
                     onClick = SubFlowRepository::previousCue,
@@ -77,7 +84,7 @@ internal fun SubFlowElevatedSubtitleBar(
                 }
             }
 
-            Box {
+            Box(modifier = Modifier.widthIn(max = textMaxWidth)) {
                 StyledSubtitleText(
                     text = subtitleText,
                     style = subtitleStyle.copy(backgroundColor = Color.Transparent),
@@ -116,6 +123,7 @@ internal fun SubFlowElevatedSubtitleBar(
                         ),
                     )
                 }
+            }
             }
         }
     }

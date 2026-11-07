@@ -165,7 +165,7 @@ private fun SubFlowWordsBody(isTablet: Boolean) {
                                         when (entry.status) {
                                             SubFlowWordStatus.New -> preferences.newWordColor
                                             SubFlowWordStatus.Learning -> preferences.learningWordColor
-                                            SubFlowWordStatus.Known -> "#4DD18C"
+                                            SubFlowWordStatus.Known -> preferences.knownWordColor
                                         },
                                         tokens.colors.textMuted,
                                     ),

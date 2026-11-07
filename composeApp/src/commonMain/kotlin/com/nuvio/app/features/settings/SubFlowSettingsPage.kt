@@ -63,6 +63,7 @@ import nuvio.composeapp.generated.resources.subflow_settings_about_description
 import nuvio.composeapp.generated.resources.subflow_settings_auto_speak
 import nuvio.composeapp.generated.resources.subflow_settings_colors_section
 import nuvio.composeapp.generated.resources.subflow_settings_known_color
+import nuvio.composeapp.generated.resources.subflow_settings_learning_color
 import nuvio.composeapp.generated.resources.subflow_settings_color_hex
 import nuvio.composeapp.generated.resources.subflow_settings_color_invalid
 import nuvio.composeapp.generated.resources.subflow_settings_color_save
@@ -267,6 +268,7 @@ private fun SubFlowSettingsBody(
                     if (index > 0) SettingsGroupDivider(isTablet = isTablet)
                     SettingsNavigationRow(
                         title = subFlowCardSectionLabel(section),
+                        description = null,
                         isTablet = isTablet,
                         trailingContent = {
                             IconButton(

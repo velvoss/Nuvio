@@ -265,7 +265,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         val existingCueState = SubFlowRepository.cueState.value
         val selectionContext = subFlowSelection?.context?.trim().orEmpty()
         if ((existingCueState?.cues?.size ?: 0) > 1 &&
-            existingCueState?.current?.text?.trim() == selectionContext
+            cueTextMatches(existingCueState?.current?.text.orEmpty(), selectionContext)
         ) {
             return@LaunchedEffect
         }
@@ -290,19 +290,19 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         val existingCueState = SubFlowRepository.cueState.value
         val contextText = subFlowSelection?.context?.trim().orEmpty()
         if ((existingCueState?.cues?.size ?: 0) > 1 &&
-            existingCueState?.current?.text?.trim() == contextText
+            cueTextMatches(existingCueState?.current?.text.orEmpty(), contextText)
         ) {
             return@LaunchedEffect
         }
         val liveText = SubFlowRepository.liveSubtitleText.value.trim()
         val positionMs = playbackSnapshot.positionMs
         val contextIndex = if (contextText.isNotBlank()) {
-            cues.indexOfFirst { it.text.trim() == contextText }
+            cues.indexOfFirst { cueTextMatches(it.text, contextText) }
         } else {
             -1
         }
         val liveIndex = if (liveText.isNotBlank()) {
-            cues.indexOfFirst { it.text.trim() == liveText }
+            cues.indexOfFirst { cueTextMatches(it.text, liveText) }
         } else {
             -1
         }
@@ -1233,3 +1233,10 @@ private fun SkipInterval.isIntroLikeSkipInterval(): Boolean =
 
 private const val CREDENTIAL_REFRESH_POLL_COUNT = 30
 private const val CREDENTIAL_REFRESH_POLL_INTERVAL_MS = 500L
+
+private fun cueTextMatches(cueText: String, target: String): Boolean {
+    val cue = cueText.trim()
+    val value = target.trim()
+    if (cue.isEmpty() || value.isEmpty()) return false
+    return cue == value || cue.contains(value, ignoreCase = true) || value.contains(cue, ignoreCase = true)
+}

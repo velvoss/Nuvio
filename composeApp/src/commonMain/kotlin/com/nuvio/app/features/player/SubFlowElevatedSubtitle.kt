@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -71,11 +72,23 @@ internal fun SubFlowElevatedSubtitleBar(
     }
 
     BoxWithConstraints(modifier = modifier.width(barWidth)) {
+        val leftControlsWidth = if (preferences.showNavigation) 30.dp else 0.dp
+        val rightControlsWidth = (if (preferences.showSentenceSpeaker) 30.dp else 0.dp) +
+            (if (preferences.showNavigation) 30.dp else 0.dp)
+        val balanceWidth = if (rightControlsWidth > leftControlsWidth) {
+            rightControlsWidth - leftControlsWidth
+        } else {
+            leftControlsWidth - rightControlsWidth
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
+            if (rightControlsWidth > leftControlsWidth) {
+                Spacer(modifier = Modifier.width(balanceWidth))
+            }
             if (preferences.showNavigation) {
                 IconButton(
                     onClick = SubFlowRepository::previousCue,
@@ -181,6 +194,9 @@ internal fun SubFlowElevatedSubtitleBar(
                         ),
                     )
                 }
+            }
+            if (leftControlsWidth > rightControlsWidth) {
+                Spacer(modifier = Modifier.width(balanceWidth))
             }
         }
     }

@@ -111,8 +111,15 @@ internal fun SubFlowWordCardOverlay(
                 val bottomInset = if (compactHeight) 6.dp else 16.dp
                 val gap = if (compactHeight) 8.dp else 18.dp
                 val maxBarWidth = maxWidth - horizontalMargin * 2
-                val controlsWidth = (if (preferences.showNavigation) 60.dp else 0.dp) +
-                    (if (preferences.showSentenceSpeaker) 30.dp else 0.dp)
+                val leftControlsWidth = if (preferences.showNavigation) 30.dp else 0.dp
+                val rightControlsWidth = (if (preferences.showSentenceSpeaker) 30.dp else 0.dp) +
+                    (if (preferences.showNavigation) 30.dp else 0.dp)
+                val balanceWidth = if (rightControlsWidth > leftControlsWidth) {
+                    rightControlsWidth - leftControlsWidth
+                } else {
+                    leftControlsWidth - rightControlsWidth
+                }
+                val controlsWidth = leftControlsWidth + rightControlsWidth + balanceWidth
                 val cardWidth = minOf(
                     if (compactWidth) 300.dp else 400.dp,
                     maxBarWidth - controlsWidth - 12.dp,

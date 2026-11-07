@@ -8,8 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nuvio.app.core.ui.nuvio
@@ -49,6 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun SubFlowElevatedSubtitleBar(
     subtitleStyle: SubtitleStyleState,
+    barWidth: Dp,
     modifier: Modifier = Modifier,
 ) {
     SubFlowRepository.ensureLoaded()
@@ -69,12 +70,7 @@ internal fun SubFlowElevatedSubtitleBar(
         Color.Black.copy(alpha = 0.40f)
     }
 
-    BoxWithConstraints(modifier = modifier) {
-        val controlsWidth = (if (preferences.showNavigation) 68.dp else 0.dp) +
-            (if (preferences.showSentenceSpeaker) 34.dp else 0.dp) +
-            8.dp
-        val fieldMaxWidth = (maxWidth - controlsWidth).coerceAtLeast(120.dp)
-
+    BoxWithConstraints(modifier = modifier.width(barWidth)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -83,7 +79,7 @@ internal fun SubFlowElevatedSubtitleBar(
             if (preferences.showNavigation) {
                 IconButton(
                     onClick = SubFlowRepository::previousCue,
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier.size(30.dp),
                     enabled = cueState?.canGoPrevious == true,
                 ) {
                     Icon(
@@ -97,7 +93,7 @@ internal fun SubFlowElevatedSubtitleBar(
             }
 
             Surface(
-                modifier = Modifier.widthIn(max = fieldMaxWidth).wrapContentWidth(),
+                modifier = Modifier.weight(1f),
                 color = background,
                 shape = RoundedCornerShape(16.dp),
             ) {
@@ -161,7 +157,7 @@ internal fun SubFlowElevatedSubtitleBar(
             if (preferences.showSentenceSpeaker) {
                 IconButton(
                     onClick = SubFlowRepository::speakCueText,
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier.size(30.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.VolumeUp,
@@ -174,7 +170,7 @@ internal fun SubFlowElevatedSubtitleBar(
             if (preferences.showNavigation) {
                 IconButton(
                     onClick = SubFlowRepository::nextCue,
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier.size(30.dp),
                     enabled = cueState?.canGoNext == true,
                 ) {
                     Icon(

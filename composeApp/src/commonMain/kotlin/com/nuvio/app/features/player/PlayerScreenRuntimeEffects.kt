@@ -262,6 +262,13 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
     LaunchedEffect(subFlowSelection?.word) {
         if (subFlowSelection == null) return@LaunchedEffect
         SubFlowRepository.setSourceLanguage(activeSubtitleSourceLanguage)
+        val existingCueState = SubFlowRepository.cueState.value
+        val selectionContext = subFlowSelection?.context?.trim().orEmpty()
+        if ((existingCueState?.cues?.size ?: 0) > 1 &&
+            existingCueState?.current?.text?.trim() == selectionContext
+        ) {
+            return@LaunchedEffect
+        }
         val initialText = subFlowSelection?.context.orEmpty()
             .ifBlank { SubFlowRepository.liveSubtitleText.value }
         if (initialText.isNotBlank()) {
@@ -280,7 +287,13 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         if (subFlowSelection == null) return@LaunchedEffect
         val cues = subtitleAutoSyncState.cues
         if (cues.isEmpty()) return@LaunchedEffect
+        val existingCueState = SubFlowRepository.cueState.value
         val contextText = subFlowSelection?.context?.trim().orEmpty()
+        if ((existingCueState?.cues?.size ?: 0) > 1 &&
+            existingCueState?.current?.text?.trim() == contextText
+        ) {
+            return@LaunchedEffect
+        }
         val liveText = SubFlowRepository.liveSubtitleText.value.trim()
         val positionMs = playbackSnapshot.positionMs
         val contextIndex = if (contextText.isNotBlank()) {

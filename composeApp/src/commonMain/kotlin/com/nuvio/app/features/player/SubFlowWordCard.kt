@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -110,11 +110,14 @@ internal fun SubFlowWordCardOverlay(
                 val topInset = if (compactHeight) 52.dp else 88.dp
                 val bottomInset = if (compactHeight) 6.dp else 16.dp
                 val gap = if (compactHeight) 8.dp else 18.dp
-                val cardMaxWidth = minOf(
-                    maxWidth - horizontalMargin * 2 - 8.dp,
-                    if (compactWidth) 360.dp else 400.dp,
-                )
-                val barMaxWidth = minOf(cardMaxWidth + 20.dp, maxWidth - horizontalMargin * 2)
+                val maxBarWidth = maxWidth - horizontalMargin * 2
+                val controlsWidth = (if (preferences.showNavigation) 60.dp else 0.dp) +
+                    (if (preferences.showSentenceSpeaker) 30.dp else 0.dp)
+                val cardWidth = minOf(
+                    if (compactWidth) 300.dp else 400.dp,
+                    maxBarWidth - controlsWidth - 12.dp,
+                ).coerceAtLeast(220.dp)
+                val barWidth = minOf(cardWidth + controlsWidth + 12.dp, maxBarWidth)
 
                 Column(
                     modifier = Modifier
@@ -129,7 +132,7 @@ internal fun SubFlowWordCardOverlay(
                 ) {
                     SubFlowElevatedSubtitleBar(
                         subtitleStyle = subtitleStyle,
-                        modifier = Modifier.widthIn(max = barMaxWidth),
+                        barWidth = barWidth,
                     )
                     Spacer(modifier = Modifier.height(gap))
                     BoxWithConstraints(
@@ -143,8 +146,7 @@ internal fun SubFlowWordCardOverlay(
                             cueTranslation = cueState?.translation ?: current.sentenceTranslation,
                             onClose = { SubFlowRepository.closeCard() },
                             modifier = Modifier
-                                .widthIn(max = cardMaxWidth)
-                                .fillMaxWidth()
+                                .width(cardWidth)
                                 .heightIn(max = minOf(maxHeight, screenHeight * 0.72f, 430.dp)),
                         )
                     }

@@ -3158,4 +3158,13 @@
     <string name="subflow_settings_show_sentence_speaker">Show subtitle speaker</string>
     <string name="subflow_settings_show_navigation">Show previous and next</string>
     <string name="subflow_settings_show_status">Show word status</string>
+
+    <string name="subflow_settings_colors_section">Word colors</string>
+    <string name="subflow_settings_known_color">Known word color</string>
+    <string name="subflow_settings_color_hex">Hex color</string>
+    <string name="subflow_settings_color_invalid">Enter a valid hex color like #5CC8F5</string>
+    <string name="subflow_settings_color_save">Save color</string>
+    <string name="subflow_settings_card_order_section">Card element order</string>
+    <string name="subflow_settings_move_up">Move up</string>
+    <string name="subflow_settings_move_down">Move down</string>
 </resources>

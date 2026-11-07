@@ -81,6 +81,20 @@ object SubFlowRepository {
 
     fun setLearningWordColor(colorHex: String) = updatePreferences { copy(learningWordColor = colorHex) }
 
+    fun setKnownWordColor(colorHex: String) = updatePreferences { copy(knownWordColor = colorHex) }
+
+    fun moveCardSection(section: SubFlowCardSection, direction: Int) {
+        ensureLoaded()
+        val order = _preferences.value.cardSectionOrder.toMutableList()
+        val index = order.indexOf(section)
+        if (index < 0) return
+        val target = (index + direction).coerceIn(0, order.lastIndex)
+        if (target == index) return
+        val value = order.removeAt(index)
+        order.add(target, value)
+        updatePreferences { copy(cardSectionOrder = order) }
+    }
+
     fun setShowMeaning(show: Boolean) = updatePreferences { copy(showMeaning = show) }
 
     fun setShowContext(show: Boolean) = updatePreferences { copy(showContext = show) }

@@ -2591,4 +2591,13 @@
     <string name="subflow_settings_show_sentence_speaker">إظهار زر نطق الترجمة</string>
     <string name="subflow_settings_show_navigation">إظهار السابق والتالي</string>
     <string name="subflow_settings_show_status">إظهار حالة الكلمة</string>
+
+    <string name="subflow_settings_colors_section">ألوان الكلمات</string>
+    <string name="subflow_settings_known_color">لون الكلمات التي أعرفها</string>
+    <string name="subflow_settings_color_hex">اللون بصيغة Hex</string>
+    <string name="subflow_settings_color_invalid">أدخل لوناً صحيحاً مثل #5CC8F5</string>
+    <string name="subflow_settings_color_save">حفظ اللون</string>
+    <string name="subflow_settings_card_order_section">ترتيب عناصر البطاقة</string>
+    <string name="subflow_settings_move_up">نقل لأعلى</string>
+    <string name="subflow_settings_move_down">نقل لأسفل</string>
 </resources>

@@ -33,6 +33,12 @@ data class SubFlowPreferences(
     val speechRate: Int = 48,
     val newWordColor: String = "#FFD65E",
     val learningWordColor: String = "#5CC8F5",
+    val knownWordColor: String = "#4DD18C",
+    val cardSectionOrder: List<SubFlowCardSection> = listOf(
+        SubFlowCardSection.Meaning,
+        SubFlowCardSection.Context,
+        SubFlowCardSection.Definition,
+    ),
     val showMeaning: Boolean = true,
     val showContext: Boolean = true,
     val showDefinition: Boolean = true,
@@ -46,6 +52,10 @@ data class SubFlowPreferences(
         speechRate = speechRate.coerceIn(20, 100),
         newWordColor = newWordColor.normalizedHex("#FFD65E"),
         learningWordColor = learningWordColor.normalizedHex("#5CC8F5"),
+        knownWordColor = knownWordColor.normalizedHex("#4DD18C"),
+        cardSectionOrder = cardSectionOrder
+            .distinct()
+            .let { order -> order + SubFlowCardSection.entries.filterNot(order::contains) },
     )
 }
 
@@ -120,4 +130,12 @@ data class SubFlowCueState(
     val current: SubFlowCue? get() = cues.getOrNull(index)
     val canGoPrevious: Boolean get() = index > 0
     val canGoNext: Boolean get() = index < cues.lastIndex
+}
+
+
+@Serializable
+enum class SubFlowCardSection {
+    Meaning,
+    Context,
+    Definition,
 }

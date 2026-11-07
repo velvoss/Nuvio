@@ -1,18 +1,11 @@
 package com.nuvio.app.features.player
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
@@ -36,7 +29,7 @@ import nuvio.composeapp.generated.resources.subflow_speak_word
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun SubFlowElevatedSubtitleOverlay(
+internal fun SubFlowElevatedSubtitleBar(
     subtitleStyle: SubtitleStyleState,
     modifier: Modifier = Modifier,
 ) {
@@ -46,89 +39,82 @@ internal fun SubFlowElevatedSubtitleOverlay(
     val preferences by SubFlowRepository.preferences.collectAsState()
     val words by SubFlowRepository.words.collectAsState()
     val liveSubtitleText by SubFlowRepository.liveSubtitleText.collectAsState()
+    val currentSelection = selection ?: return
     val tokens = MaterialTheme.nuvio
+    val subtitleText = cueState?.current?.text
+        ?.takeIf { it.isNotBlank() }
+        ?: liveSubtitleText.takeIf { it.isNotBlank() }
+        ?: currentSelection.context
+    val background = if (subtitleStyle.backgroundColor.alpha > 0f) {
+        subtitleStyle.backgroundColor
+    } else {
+        Color.Black.copy(alpha = 0.40f)
+    }
 
-    AnimatedVisibility(
-        visible = selection != null,
-        modifier = modifier.fillMaxSize(),
-        enter = fadeIn(tween(160)) + slideInVertically(tween(220), initialOffsetY = { -it / 8 }),
-        exit = fadeOut(tween(120)) + slideOutVertically(tween(160), targetOffsetY = { -it / 8 }),
+    Surface(
+        modifier = modifier.wrapContentWidth(),
+        color = background,
+        shape = RoundedCornerShape(16.dp),
     ) {
-        val currentSelection = selection ?: return@AnimatedVisibility
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val topPadding = 72.dp
-            val subtitleText = cueState?.current?.text
-                ?.takeIf { it.isNotBlank() }
-                ?: liveSubtitleText.takeIf { it.isNotBlank() }
-                ?: currentSelection.context
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 12.dp, end = 12.dp, top = topPadding),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                if (preferences.showNavigation) {
-                    IconButton(
-                        onClick = SubFlowRepository::previousCue,
-                        enabled = cueState?.canGoPrevious == true,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                            contentDescription = "Previous subtitle",
-                            tint = tokens.colors.textPrimary.copy(
-                                alpha = if (cueState?.canGoPrevious == true) 0.95f else 0.35f,
-                            ),
-                        )
-                    }
-                }
-
-                val background = if (subtitleStyle.backgroundColor.alpha > 0f) {
-                    subtitleStyle.backgroundColor
-                } else {
-                    Color.Black.copy(alpha = 0.38f)
-                }
-                Surface(
-                    modifier = Modifier.weight(1f),
-                    color = background,
-                    shape = RoundedCornerShape(16.dp),
+        Row(
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            if (preferences.showNavigation) {
+                IconButton(
+                    onClick = SubFlowRepository::previousCue,
+                    modifier = Modifier.size(34.dp),
+                    enabled = cueState?.canGoPrevious == true,
                 ) {
-                    Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                        StyledSubtitleText(
-                            text = subtitleText,
-                            style = subtitleStyle.copy(backgroundColor = Color.Transparent),
-                            subFlowPreferences = preferences,
-                            subFlowWords = words,
-                            selectedWord = currentSelection.word,
-                            onSubFlowWordTap = SubFlowRepository::selectWord,
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                        contentDescription = "Previous subtitle",
+                        tint = tokens.colors.textPrimary.copy(
+                            alpha = if (cueState?.canGoPrevious == true) 0.95f else 0.30f,
+                        ),
+                    )
                 }
+            }
 
-                if (preferences.showSentenceSpeaker) {
-                    IconButton(onClick = SubFlowRepository::speakCueText) {
-                        Icon(
-                            imageVector = Icons.Rounded.VolumeUp,
-                            contentDescription = stringResource(Res.string.subflow_speak_word),
-                            tint = tokens.colors.accent,
-                        )
-                    }
+            Box {
+                StyledSubtitleText(
+                    text = subtitleText,
+                    style = subtitleStyle.copy(backgroundColor = Color.Transparent),
+                    subFlowPreferences = preferences,
+                    subFlowWords = words,
+                    selectedWord = currentSelection.word,
+                    onSubFlowWordTap = SubFlowRepository::selectWord,
+                    fillWidth = false,
+                )
+            }
+
+            if (preferences.showSentenceSpeaker) {
+                IconButton(
+                    onClick = SubFlowRepository::speakCueText,
+                    modifier = Modifier.size(34.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.VolumeUp,
+                        contentDescription = stringResource(Res.string.subflow_speak_word),
+                        tint = tokens.colors.accent,
+                    )
                 }
+            }
 
-                if (preferences.showNavigation) {
-                    IconButton(
-                        onClick = SubFlowRepository::nextCue,
-                        enabled = cueState?.canGoNext == true,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                            contentDescription = "Next subtitle",
-                            tint = tokens.colors.textPrimary.copy(
-                                alpha = if (cueState?.canGoNext == true) 0.95f else 0.35f,
-                            ),
-                        )
-                    }
+            if (preferences.showNavigation) {
+                IconButton(
+                    onClick = SubFlowRepository::nextCue,
+                    modifier = Modifier.size(34.dp),
+                    enabled = cueState?.canGoNext == true,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = "Next subtitle",
+                        tint = tokens.colors.textPrimary.copy(
+                            alpha = if (cueState?.canGoNext == true) 0.95f else 0.30f,
+                        ),
+                    )
                 }
             }
         }

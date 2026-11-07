@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,10 +17,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.VolumeUp
@@ -45,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import com.nuvio.app.core.ui.nuvio
+import com.nuvio.app.features.subflow.SubFlowCardSection
 import com.nuvio.app.features.subflow.SubFlowPreferences
 import com.nuvio.app.features.subflow.SubFlowRepository
 import com.nuvio.app.features.subflow.SubFlowSelection
@@ -64,6 +69,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun SubFlowWordCardOverlay(
+    subtitleStyle: SubtitleStyleState,
     isPlaying: Boolean,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -96,17 +102,52 @@ internal fun SubFlowWordCardOverlay(
         exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.96f),
     ) {
         lastSelection?.let { current ->
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                SubFlowWordCard(
-                    selection = current,
-                    preferences = preferences,
-                    cueText = cueState?.current?.text ?: current.context,
-                    cueTranslation = cueState?.translation ?: current.sentenceTranslation,
-                    onClose = { SubFlowRepository.closeCard() },
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val compactHeight = maxHeight < 500.dp
+                val compactWidth = maxWidth < 600.dp
+                val horizontalMargin = if (compactWidth) 8.dp else 24.dp
+                val topInset = if (compactHeight) 6.dp else 64.dp
+                val bottomInset = if (compactHeight) 6.dp else 16.dp
+                val gap = if (compactHeight) 8.dp else 18.dp
+                val cardMaxWidth = minOf(
+                    maxWidth - horizontalMargin * 2 - 8.dp,
+                    if (compactWidth) 440.dp else 480.dp,
                 )
+                val barMaxWidth = minOf(cardMaxWidth + 20.dp, maxWidth - horizontalMargin * 2)
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = topInset,
+                            start = horizontalMargin,
+                            end = horizontalMargin,
+                            bottom = bottomInset,
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    SubFlowElevatedSubtitleBar(
+                        subtitleStyle = subtitleStyle,
+                        modifier = Modifier.widthIn(max = barMaxWidth),
+                    )
+                    Spacer(modifier = Modifier.height(gap))
+                    BoxWithConstraints(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        SubFlowWordCard(
+                            selection = current,
+                            preferences = preferences,
+                            cueText = cueState?.current?.text ?: current.context,
+                            cueTranslation = cueState?.translation ?: current.sentenceTranslation,
+                            onClose = { SubFlowRepository.closeCard() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = cardMaxWidth)
+                                .heightIn(max = minOf(maxHeight, 460.dp)),
+                        )
+                    }
+                }
             }
         }
     }
@@ -119,6 +160,7 @@ private fun SubFlowWordCard(
     cueText: String,
     cueTranslation: String?,
     onClose: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val tokens = MaterialTheme.nuvio
     val entry = selection.entry
@@ -128,9 +170,7 @@ private fun SubFlowWordCard(
     val translatedContext = cueTranslation?.takeIf { it.isNotBlank() }
 
     Surface(
-        modifier = Modifier
-            .padding(horizontal = 20.dp, vertical = 16.dp)
-            .widthIn(max = 430.dp),
+        modifier = modifier,
         color = tokens.colors.surfaceDialog.copy(alpha = 0.97f),
         contentColor = tokens.colors.textPrimary,
         shape = RoundedCornerShape(28.dp),
@@ -138,125 +178,91 @@ private fun SubFlowWordCard(
         tonalElevation = 6.dp,
         shadowElevation = 16.dp,
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            text = entry.word,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = tokens.colors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        if (preferences.showWordSpeaker) {
-                            IconButton(
-                                onClick = SubFlowRepository::speakWord,
-                                modifier = Modifier.size(36.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.VolumeUp,
-                                    contentDescription = stringResource(Res.string.subflow_speak_word),
-                                    tint = tokens.colors.textPrimary,
-                                )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = entry.word,
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = tokens.colors.textPrimary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            if (preferences.showWordSpeaker) {
+                                IconButton(
+                                    onClick = SubFlowRepository::speakWord,
+                                    modifier = Modifier.size(36.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.VolumeUp,
+                                        contentDescription = stringResource(Res.string.subflow_speak_word),
+                                        tint = tokens.colors.textPrimary,
+                                    )
+                                }
                             }
                         }
+                        val meta = listOfNotNull(
+                            entry.phonetic?.takeIf { it.isNotBlank() },
+                            entry.partOfSpeech?.takeIf { it.isNotBlank() },
+                        ).joinToString(" · ")
+                        if (meta.isNotBlank()) {
+                            Text(
+                                text = meta,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = tokens.colors.textMuted,
+                            )
+                        }
                     }
-                    val meta = listOfNotNull(
-                        entry.phonetic?.takeIf { it.isNotBlank() },
-                        entry.partOfSpeech?.takeIf { it.isNotBlank() },
-                    ).joinToString(" · ")
-                    if (meta.isNotBlank()) {
-                        Text(
-                            text = meta,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = tokens.colors.textMuted,
+                    if (preferences.showStatus) {
+                        SubFlowStatusBadge(status = entry.status, color = statusColor)
+                    }
+                    Spacer(modifier = Modifier.size(4.dp))
+                    IconButton(onClick = onClose) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = stringResource(Res.string.subflow_card_close),
+                            tint = tokens.colors.textMuted,
                         )
                     }
                 }
-                if (preferences.showStatus) {
-                    SubFlowStatusBadge(status = entry.status, color = statusColor)
-                }
-                Spacer(modifier = Modifier.size(4.dp))
-                IconButton(onClick = onClose) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(Res.string.subflow_card_close),
-                        tint = tokens.colors.textMuted,
-                    )
-                }
-            }
 
-            if (preferences.showMeaning) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (selection.isLoading && meaning == null) {
-                        NuvioLoadingIndicator(size = 18.dp)
-                    }
-                    Text(
-                        text = meaning ?: if (selection.isLoading) {
-                            "…"
-                        } else {
-                            stringResource(Res.string.subflow_card_no_meaning)
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (meaning != null) tokens.colors.textPrimary else tokens.colors.textMuted,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-
-            if (preferences.showContext && contextText != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(
-                        text = stringResource(Res.string.subflow_card_context),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = tokens.colors.textMuted,
-                    )
-                    Text(
-                        text = contextText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = tokens.colors.textSecondary,
-                        textAlign = TextAlign.Start,
-                    )
-                    if (translatedContext != null) {
-                        Text(
-                            text = "«$translatedContext»",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = tokens.colors.textPrimary,
-                        )
-                    } else if (cueStateIsLoading()) {
-                        NuvioLoadingIndicator(size = 16.dp)
-                    }
-                }
-            }
-
-            if (preferences.showDefinition) {
-                entry.definition?.takeIf { it.isNotBlank() }?.let { definition ->
-                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(
-                            text = stringResource(Res.string.subflow_card_definition),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = tokens.colors.textMuted,
-                        )
-                        Text(
-                            text = definition,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = tokens.colors.textSecondary,
-                        )
+                preferences.cardSectionOrder.forEach { section ->
+                    when (section) {
+                        SubFlowCardSection.Meaning -> if (preferences.showMeaning) {
+                            SubFlowMeaningSection(
+                                meaning = meaning,
+                                isLoading = selection.isLoading,
+                            )
+                        }
+                        SubFlowCardSection.Context -> if (preferences.showContext && contextText != null) {
+                            SubFlowContextSection(
+                                contextText = contextText,
+                                translatedContext = translatedContext,
+                            )
+                        }
+                        SubFlowCardSection.Definition -> if (preferences.showDefinition) {
+                            entry.definition?.takeIf { it.isNotBlank() }?.let { definition ->
+                                SubFlowDefinitionSection(definition = definition)
+                            }
+                        }
                     }
                 }
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Button(
@@ -297,6 +303,81 @@ private fun SubFlowWordCard(
 }
 
 @Composable
+private fun SubFlowMeaningSection(
+    meaning: String?,
+    isLoading: Boolean,
+) {
+    val tokens = MaterialTheme.nuvio
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (isLoading && meaning == null) {
+            NuvioLoadingIndicator(size = 18.dp)
+        }
+        Text(
+            text = meaning ?: if (isLoading) {
+                "…"
+            } else {
+                stringResource(Res.string.subflow_card_no_meaning)
+            },
+            style = MaterialTheme.typography.titleMedium,
+            color = if (meaning != null) tokens.colors.textPrimary else tokens.colors.textMuted,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun SubFlowContextSection(
+    contextText: String,
+    translatedContext: String?,
+) {
+    val tokens = MaterialTheme.nuvio
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(
+            text = stringResource(Res.string.subflow_card_context),
+            style = MaterialTheme.typography.labelMedium,
+            color = tokens.colors.textMuted,
+        )
+        Text(
+            text = contextText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = tokens.colors.textSecondary,
+            textAlign = TextAlign.Start,
+        )
+        if (translatedContext != null) {
+            Text(
+                text = "«$translatedContext»",
+                style = MaterialTheme.typography.bodyLarge,
+                color = tokens.colors.textPrimary,
+            )
+        } else if (cueStateIsLoading()) {
+            NuvioLoadingIndicator(size = 16.dp)
+        }
+    }
+}
+
+@Composable
+private fun SubFlowDefinitionSection(
+    definition: String,
+) {
+    val tokens = MaterialTheme.nuvio
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(
+            text = stringResource(Res.string.subflow_card_definition),
+            style = MaterialTheme.typography.labelMedium,
+            color = tokens.colors.textMuted,
+        )
+        Text(
+            text = definition,
+            style = MaterialTheme.typography.bodyMedium,
+            color = tokens.colors.textSecondary,
+        )
+    }
+}
+
+@Composable
 private fun cueStateIsLoading(): Boolean {
     val cueState by SubFlowRepository.cueState.collectAsState()
     return cueState?.isLoading == true
@@ -326,7 +407,7 @@ private fun SubFlowStatusBadge(status: SubFlowWordStatus, color: Color) {
 internal fun subFlowStatusColor(status: SubFlowWordStatus, preferences: SubFlowPreferences): Color = when (status) {
     SubFlowWordStatus.New -> parseSubFlowColor(preferences.newWordColor, Color(0xFFFFD65E))
     SubFlowWordStatus.Learning -> parseSubFlowColor(preferences.learningWordColor, Color(0xFF5CC8F5))
-    SubFlowWordStatus.Known -> Color(0xFF4DD18C)
+    SubFlowWordStatus.Known -> parseSubFlowColor(preferences.knownWordColor, Color(0xFF4DD18C))
 }
 
 internal fun parseSubFlowColor(hex: String, fallback: Color): Color {

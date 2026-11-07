@@ -114,10 +114,11 @@ internal fun StyledSubtitleText(
     subFlowPreferences: SubFlowPreferences? = null,
     subFlowWords: Map<String, SubFlowWordEntry> = emptyMap(),
     selectedWord: String? = null,
+    fillWidth: Boolean = true,
 ) {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    BoxWithConstraints(modifier.fillMaxWidth()) {
+    BoxWithConstraints(if (fillWidth) modifier.fillMaxWidth() else modifier) {
         val paddingX = with(density) { (8.dp * scale).toPx() }
         val paddingY = with(density) { (4.dp * scale).toPx() }
         val availableWidth = constraints.maxWidth.toFloat()
@@ -147,8 +148,8 @@ internal fun StyledSubtitleText(
             if (subFlowPreferences == null) {
                 AnnotatedString(text)
             } else {
-                val newColor = parseSubFlowColor(subFlowPreferences.newWordColor, Color(0xFFFFD65E))
                 val learningColor = parseSubFlowColor(subFlowPreferences.learningWordColor, Color(0xFF5CC8F5))
+                val knownColor = parseSubFlowColor(subFlowPreferences.knownWordColor, Color(0xFF4DD18C))
                 buildAnnotatedString {
                     append(text)
                     SubFlowText.wordRanges(text).forEach { range ->
@@ -156,8 +157,8 @@ internal fun StyledSubtitleText(
                         val key = wordText.lowercase()
                         val status = subFlowWords[key]?.status
                         val wordColor = when (status) {
-                            SubFlowWordStatus.New -> newColor
                             SubFlowWordStatus.Learning -> learningColor
+                            SubFlowWordStatus.Known -> knownColor
                             else -> null
                         }
                         if (wordColor != null) {

@@ -399,11 +399,8 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi(
             modifier = panelModifier,
         )
         if (!isInPip) {
-            SubFlowElevatedSubtitleOverlay(
-                subtitleStyle = subtitleStyle,
-                modifier = videoModifier,
-            )
             SubFlowWordCardOverlay(
+                subtitleStyle = subtitleStyle,
                 isPlaying = playbackSnapshot.isPlaying,
                 onPause = { playerController?.pause() },
                 onResume = { playerController?.play() },

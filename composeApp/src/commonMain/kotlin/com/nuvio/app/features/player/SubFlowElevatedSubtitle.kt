@@ -146,8 +146,10 @@ internal fun SubFlowElevatedSubtitleBar(
                     var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
                     Text(
                         text = annotatedText,
-                        modifier = Modifier.pointerInput(subtitleText, textLayout) {
-                            detectTapGestures { position ->
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .pointerInput(subtitleText, textLayout) {
+                                detectTapGestures { position ->
                                 val layout = textLayout ?: return@detectTapGestures
                                 val offset = layout.getOffsetForPosition(position)
                                 SubFlowText.wordAt(subtitleText, offset)?.let { hit ->

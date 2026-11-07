@@ -103,15 +103,16 @@ internal fun SubFlowWordCardOverlay(
     ) {
         lastSelection?.let { current ->
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val screenHeight = maxHeight
                 val compactHeight = maxHeight < 500.dp
                 val compactWidth = maxWidth < 600.dp
                 val horizontalMargin = if (compactWidth) 8.dp else 24.dp
-                val topInset = if (compactHeight) 6.dp else 64.dp
+                val topInset = if (compactHeight) 52.dp else 88.dp
                 val bottomInset = if (compactHeight) 6.dp else 16.dp
                 val gap = if (compactHeight) 8.dp else 18.dp
                 val cardMaxWidth = minOf(
                     maxWidth - horizontalMargin * 2 - 8.dp,
-                    if (compactWidth) 440.dp else 480.dp,
+                    if (compactWidth) 380.dp else 420.dp,
                 )
                 val barMaxWidth = minOf(cardMaxWidth + 20.dp, maxWidth - horizontalMargin * 2)
 
@@ -142,9 +143,9 @@ internal fun SubFlowWordCardOverlay(
                             cueTranslation = cueState?.translation ?: current.sentenceTranslation,
                             onClose = { SubFlowRepository.closeCard() },
                             modifier = Modifier
-                                .fillMaxWidth()
                                 .widthIn(max = cardMaxWidth)
-                                .heightIn(max = minOf(maxHeight, 460.dp)),
+                                .fillMaxWidth()
+                                .heightIn(max = minOf(maxHeight, screenHeight * 0.75f, 460.dp)),
                         )
                     }
                 }
@@ -181,7 +182,7 @@ private fun SubFlowWordCard(
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
                     .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

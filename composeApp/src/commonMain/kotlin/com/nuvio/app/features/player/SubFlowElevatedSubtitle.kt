@@ -3,6 +3,7 @@ package com.nuvio.app.features.player
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,21 +54,17 @@ internal fun SubFlowElevatedSubtitleBar(
         Color.Black.copy(alpha = 0.40f)
     }
 
-    Surface(
-        modifier = modifier.wrapContentWidth(),
-        color = background,
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        BoxWithConstraints {
-            val controlsWidth = (if (preferences.showNavigation) 68.dp else 0.dp) +
-                (if (preferences.showSentenceSpeaker) 34.dp else 0.dp) +
-                8.dp
-            val textMaxWidth = (maxWidth - controlsWidth).coerceAtLeast(96.dp)
-            Row(
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
+    BoxWithConstraints(modifier = modifier) {
+        val controlsWidth = (if (preferences.showNavigation) 68.dp else 0.dp) +
+            (if (preferences.showSentenceSpeaker) 34.dp else 0.dp) +
+            8.dp
+        val fieldMaxWidth = (maxWidth - controlsWidth).coerceAtLeast(120.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
             if (preferences.showNavigation) {
                 IconButton(
                     onClick = SubFlowRepository::previousCue,
@@ -84,16 +81,22 @@ internal fun SubFlowElevatedSubtitleBar(
                 }
             }
 
-            Box(modifier = Modifier.widthIn(max = textMaxWidth)) {
-                StyledSubtitleText(
-                    text = subtitleText,
-                    style = subtitleStyle.copy(backgroundColor = Color.Transparent),
-                    subFlowPreferences = preferences,
-                    subFlowWords = words,
-                    selectedWord = currentSelection.word,
-                    onSubFlowWordTap = SubFlowRepository::selectWord,
-                    fillWidth = false,
-                )
+            Surface(
+                modifier = Modifier.widthIn(max = fieldMaxWidth).wrapContentWidth(),
+                color = background,
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                    StyledSubtitleText(
+                        text = subtitleText,
+                        style = subtitleStyle.copy(backgroundColor = Color.Transparent),
+                        subFlowPreferences = preferences,
+                        subFlowWords = words,
+                        selectedWord = currentSelection.word,
+                        onSubFlowWordTap = SubFlowRepository::selectWord,
+                        fillWidth = false,
+                    )
+                }
             }
 
             if (preferences.showSentenceSpeaker) {
@@ -123,7 +126,6 @@ internal fun SubFlowElevatedSubtitleBar(
                         ),
                     )
                 }
-            }
             }
         }
     }

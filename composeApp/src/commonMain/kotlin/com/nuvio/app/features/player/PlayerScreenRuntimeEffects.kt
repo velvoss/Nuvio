@@ -262,17 +262,16 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
     LaunchedEffect(subFlowSelection?.word) {
         if (subFlowSelection == null) return@LaunchedEffect
         SubFlowRepository.setSourceLanguage(activeSubtitleSourceLanguage)
+        val initialText = SubFlowRepository.liveSubtitleText.value
+            .ifBlank { subFlowSelection?.context.orEmpty() }
+        if (initialText.isNotBlank()) {
+            SubFlowRepository.openCues(
+                cues = listOf(SubFlowCue(text = initialText, startTimeMs = 0L, endTimeMs = Long.MAX_VALUE)),
+                index = 0,
+            )
+        }
         if (selectedAddonSubtitle != null) {
             loadSubtitleAutoSyncCues()
-        } else {
-            val text = SubFlowRepository.liveSubtitleText.value
-                .ifBlank { subFlowSelection?.context.orEmpty() }
-            if (text.isNotBlank()) {
-                SubFlowRepository.openCues(
-                    cues = listOf(SubFlowCue(text = text, startTimeMs = 0L, endTimeMs = Long.MAX_VALUE)),
-                    index = 0,
-                )
-            }
         }
     }
 

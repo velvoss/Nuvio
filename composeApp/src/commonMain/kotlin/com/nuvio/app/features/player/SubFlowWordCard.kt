@@ -112,7 +112,7 @@ internal fun SubFlowWordCardOverlay(
                 val gap = if (compactHeight) 8.dp else 18.dp
                 val cardMaxWidth = minOf(
                     maxWidth - horizontalMargin * 2 - 8.dp,
-                    if (compactWidth) 380.dp else 420.dp,
+                    if (compactWidth) 360.dp else 400.dp,
                 )
                 val barMaxWidth = minOf(cardMaxWidth + 20.dp, maxWidth - horizontalMargin * 2)
 
@@ -145,7 +145,7 @@ internal fun SubFlowWordCardOverlay(
                             modifier = Modifier
                                 .widthIn(max = cardMaxWidth)
                                 .fillMaxWidth()
-                                .heightIn(max = minOf(maxHeight, screenHeight * 0.75f, 460.dp)),
+                                .heightIn(max = minOf(maxHeight, screenHeight * 0.72f, 430.dp)),
                         )
                     }
                 }

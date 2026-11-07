@@ -262,8 +262,8 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
     LaunchedEffect(subFlowSelection?.word) {
         if (subFlowSelection == null) return@LaunchedEffect
         SubFlowRepository.setSourceLanguage(activeSubtitleSourceLanguage)
-        val initialText = SubFlowRepository.liveSubtitleText.value
-            .ifBlank { subFlowSelection?.context.orEmpty() }
+        val initialText = subFlowSelection?.context.orEmpty()
+            .ifBlank { SubFlowRepository.liveSubtitleText.value }
         if (initialText.isNotBlank()) {
             SubFlowRepository.openCues(
                 cues = listOf(SubFlowCue(text = initialText, startTimeMs = 0L, endTimeMs = Long.MAX_VALUE)),
@@ -271,7 +271,8 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
             )
         }
         if (selectedAddonSubtitle != null) {
-            loadSubtitleAutoSyncCues()
+            subtitleAutoSyncState = SubtitleAutoSyncUiState()
+            loadSubtitleAutoSyncCues(force = true)
         }
     }
 
@@ -279,17 +280,23 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         if (subFlowSelection == null) return@LaunchedEffect
         val cues = subtitleAutoSyncState.cues
         if (cues.isEmpty()) return@LaunchedEffect
+        val contextText = subFlowSelection?.context?.trim().orEmpty()
         val liveText = SubFlowRepository.liveSubtitleText.value.trim()
         val positionMs = playbackSnapshot.positionMs
-        val textIndex = if (liveText.isNotBlank()) {
+        val contextIndex = if (contextText.isNotBlank()) {
+            cues.indexOfFirst { it.text.trim() == contextText }
+        } else {
+            -1
+        }
+        val liveIndex = if (liveText.isNotBlank()) {
             cues.indexOfFirst { it.text.trim() == liveText }
         } else {
             -1
         }
-        val index = if (textIndex >= 0) {
-            textIndex
-        } else {
-            cues.indexOfLast { it.startTimeMs <= positionMs }.coerceAtLeast(0)
+        val index = when {
+            contextIndex >= 0 -> contextIndex
+            liveIndex >= 0 -> liveIndex
+            else -> cues.indexOfLast { it.startTimeMs <= positionMs }.coerceAtLeast(0)
         }
         SubFlowRepository.openCues(
             cues = cues.map { SubFlowCue(it.text, it.startTimeMs, it.endTimeMs) },

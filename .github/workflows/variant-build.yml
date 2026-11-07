@@ -1,9 +1,9 @@
-name: Build Variant
+name: Build SubFlow UI Preview
 
 on:
   push:
     branches:
-      - 'variant/**'
+      - 'variant/subflow-ui'
   workflow_dispatch:
     inputs:
       target:
@@ -64,11 +64,11 @@ jobs:
     name: Build iOS unsigned IPA
     if: github.event_name == 'push' || inputs.target == 'ios-only' || inputs.target == 'all'
     runs-on: ${{ vars.IOS_RUNNER_LABEL || 'xcode-27' }}
-    timeout-minutes: 180
+    timeout-minutes: 45
     env:
       DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_27.1.app/Contents/Developer' }}
       GRADLE_OPTS: -Dfile.encoding=UTF-8
-      IOS_CONFIGURATION: Release
+      IOS_CONFIGURATION: Debug
       NUVIO_IOS_DISTRIBUTION: full
       NUVIO_IOS_PHASE_PROFILE: skip-both
       KOTLIN_DAEMON_JVMARGS: -Xmx1024M
@@ -82,7 +82,7 @@ jobs:
 
       - name: Compute artifact name
         id: artifact
-        run: echo "name=nuvio-${GITHUB_REF_NAME//\//-}-ios-release" >> "${GITHUB_OUTPUT}"
+        run: echo "name=nuvio-subflow-ui-debug" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -156,12 +156,12 @@ jobs:
       - name: Prepare iOS dependencies
         run: ./scripts/prepare-ios-dependencies.sh
 
-      - name: Build unsigned full Release IPA
+      - name: Build unsigned full Debug IPA
         run: ./scripts/build-ios-ipa.sh
 
       - name: Summarize IPA
         run: |
-          ipa_path="$(find build/ios-ipa -maxdepth 1 -type f -name '*-release.ipa' -print -quit)"
+          ipa_path="$(find build/ios-ipa -maxdepth 1 -type f -name '*-debug.ipa' -print -quit)"
           if [[ -z "${ipa_path}" ]]; then
             echo "No IPA was produced." >&2
             exit 1
@@ -172,7 +172,7 @@ jobs:
             echo "- File: $(basename "${ipa_path}")"
             echo "- Size: $(du -h "${ipa_path}" | cut -f1)"
             echo "- SHA-256: $(shasum -a 256 "${ipa_path}" | awk '{print $1}')"
-            echo "- Configuration: Release"
+            echo "- Configuration: Debug"
             echo "- Signing: unsigned"
           } >> "${GITHUB_STEP_SUMMARY}"
 

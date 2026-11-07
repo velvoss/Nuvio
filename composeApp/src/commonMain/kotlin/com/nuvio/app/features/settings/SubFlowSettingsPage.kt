@@ -1,17 +1,11 @@
 package com.nuvio.app.features.settings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,8 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -33,7 +25,6 @@ import com.nuvio.app.core.ui.DialogButtonStyle
 import com.nuvio.app.core.ui.DialogButtons
 import com.nuvio.app.core.ui.DialogSurface
 import com.nuvio.app.core.ui.nuvio
-import com.nuvio.app.features.player.parseSubFlowColor
 import com.nuvio.app.features.subflow.SubFlowLanguageName
 import com.nuvio.app.features.subflow.SubFlowLanguages
 import com.nuvio.app.features.subflow.SubFlowRepository
@@ -54,6 +45,14 @@ import nuvio.composeapp.generated.resources.subflow_review_title
 import nuvio.composeapp.generated.resources.subflow_settings_about
 import nuvio.composeapp.generated.resources.subflow_settings_about_description
 import nuvio.composeapp.generated.resources.subflow_settings_auto_speak
+import nuvio.composeapp.generated.resources.subflow_settings_card_section
+import nuvio.composeapp.generated.resources.subflow_settings_show_meaning
+import nuvio.composeapp.generated.resources.subflow_settings_show_context
+import nuvio.composeapp.generated.resources.subflow_settings_show_definition
+import nuvio.composeapp.generated.resources.subflow_settings_show_word_speaker
+import nuvio.composeapp.generated.resources.subflow_settings_show_sentence_speaker
+import nuvio.composeapp.generated.resources.subflow_settings_show_navigation
+import nuvio.composeapp.generated.resources.subflow_settings_show_status
 import nuvio.composeapp.generated.resources.subflow_settings_clear_action
 import nuvio.composeapp.generated.resources.subflow_settings_clear_message
 import nuvio.composeapp.generated.resources.subflow_settings_clear_title
@@ -62,8 +61,6 @@ import nuvio.composeapp.generated.resources.subflow_settings_dictionary
 import nuvio.composeapp.generated.resources.subflow_settings_dictionary_description
 import nuvio.composeapp.generated.resources.subflow_settings_enable
 import nuvio.composeapp.generated.resources.subflow_settings_enable_description
-import nuvio.composeapp.generated.resources.subflow_settings_learning_color
-import nuvio.composeapp.generated.resources.subflow_settings_new_color
 import nuvio.composeapp.generated.resources.subflow_settings_saved_words
 import nuvio.composeapp.generated.resources.subflow_settings_saved_words_value
 import nuvio.composeapp.generated.resources.subflow_settings_speech_rate
@@ -72,9 +69,6 @@ import nuvio.composeapp.generated.resources.subflow_settings_translate_sentence
 import nuvio.composeapp.generated.resources.subflow_title
 import nuvio.composeapp.generated.resources.subflow_words_title
 import org.jetbrains.compose.resources.stringResource
-
-private val newWordColorChoices = listOf("#FFD65E", "#FF9F43", "#FF6B6B", "#F368E0")
-private val learningWordColorChoices = listOf("#5CC8F5", "#54A0FF", "#4DD18C", "#A55EEA")
 
 internal fun LazyListScope.subFlowSettingsContent(
     isTablet: Boolean,
@@ -159,22 +153,55 @@ private fun SubFlowSettingsBody(
             }
         }
 
-        SettingsSection(title = stringResource(Res.string.subflow_settings_new_color), isTablet = isTablet) {
+        SettingsSection(title = stringResource(Res.string.subflow_settings_card_section), isTablet = isTablet) {
             SettingsGroup(isTablet = isTablet) {
-                SubFlowColorRow(
-                    title = stringResource(Res.string.subflow_settings_new_color),
-                    choices = newWordColorChoices,
-                    selected = preferences.newWordColor,
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_meaning),
+                    checked = preferences.showMeaning,
                     isTablet = isTablet,
-                    onSelected = SubFlowRepository::setNewWordColor,
+                    onCheckedChange = SubFlowRepository::setShowMeaning,
                 )
                 SettingsGroupDivider(isTablet = isTablet)
-                SubFlowColorRow(
-                    title = stringResource(Res.string.subflow_settings_learning_color),
-                    choices = learningWordColorChoices,
-                    selected = preferences.learningWordColor,
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_context),
+                    checked = preferences.showContext,
                     isTablet = isTablet,
-                    onSelected = SubFlowRepository::setLearningWordColor,
+                    onCheckedChange = SubFlowRepository::setShowContext,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_definition),
+                    checked = preferences.showDefinition,
+                    isTablet = isTablet,
+                    onCheckedChange = SubFlowRepository::setShowDefinition,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_word_speaker),
+                    checked = preferences.showWordSpeaker,
+                    isTablet = isTablet,
+                    onCheckedChange = SubFlowRepository::setShowWordSpeaker,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_sentence_speaker),
+                    checked = preferences.showSentenceSpeaker,
+                    isTablet = isTablet,
+                    onCheckedChange = SubFlowRepository::setShowSentenceSpeaker,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_navigation),
+                    checked = preferences.showNavigation,
+                    isTablet = isTablet,
+                    onCheckedChange = SubFlowRepository::setShowNavigation,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.subflow_settings_show_status),
+                    checked = preferences.showStatus,
+                    isTablet = isTablet,
+                    onCheckedChange = SubFlowRepository::setShowStatus,
                 )
             }
         }
@@ -322,51 +349,6 @@ private fun SubFlowInfoRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = tokens.colors.textMuted,
             )
-        }
-    }
-}
-
-@Composable
-private fun SubFlowColorRow(
-    title: String,
-    choices: List<String>,
-    selected: String,
-    isTablet: Boolean,
-    onSelected: (String) -> Unit,
-) {
-    val tokens = MaterialTheme.nuvio
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = if (isTablet) 20.dp else 16.dp,
-                vertical = if (isTablet) 16.dp else 14.dp,
-            ),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = tokens.colors.textPrimary,
-            fontWeight = FontWeight.Medium,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            choices.forEach { hex ->
-                val color = parseSubFlowColor(hex, tokens.colors.accent)
-                val isSelected = hex.equals(selected, ignoreCase = true)
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .border(
-                            width = if (isSelected) 3.dp else 1.dp,
-                            color = if (isSelected) tokens.colors.accent else tokens.colors.borderDefault,
-                            shape = CircleShape,
-                        )
-                        .clickable { onSelected(hex) },
-                )
-            }
         }
     }
 }

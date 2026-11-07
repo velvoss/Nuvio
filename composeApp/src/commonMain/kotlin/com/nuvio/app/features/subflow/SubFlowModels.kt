@@ -33,6 +33,13 @@ data class SubFlowPreferences(
     val speechRate: Int = 48,
     val newWordColor: String = "#FFD65E",
     val learningWordColor: String = "#5CC8F5",
+    val showMeaning: Boolean = true,
+    val showContext: Boolean = true,
+    val showDefinition: Boolean = true,
+    val showWordSpeaker: Boolean = true,
+    val showSentenceSpeaker: Boolean = true,
+    val showNavigation: Boolean = true,
+    val showStatus: Boolean = true,
 ) {
     fun normalized(): SubFlowPreferences = copy(
         targetLanguage = targetLanguage.ifBlank { "ar" },
@@ -95,4 +102,22 @@ fun SubFlowWordStatusLabel(status: SubFlowWordStatus): String = when (status) {
     SubFlowWordStatus.New -> "جديدة"
     SubFlowWordStatus.Learning -> "أتعلمها"
     SubFlowWordStatus.Known -> "أعرفها"
+}
+
+
+data class SubFlowCue(
+    val text: String,
+    val startTimeMs: Long,
+    val endTimeMs: Long,
+)
+
+data class SubFlowCueState(
+    val cues: List<SubFlowCue>,
+    val index: Int,
+    val translation: String? = null,
+    val isLoading: Boolean = false,
+) {
+    val current: SubFlowCue? get() = cues.getOrNull(index)
+    val canGoPrevious: Boolean get() = index > 0
+    val canGoNext: Boolean get() = index < cues.lastIndex
 }

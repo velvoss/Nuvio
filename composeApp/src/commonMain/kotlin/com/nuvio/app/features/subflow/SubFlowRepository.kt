@@ -1,5 +1,6 @@
 package com.nuvio.app.features.subflow
 
+import com.nuvio.app.features.player.normalizeLanguageCode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +32,16 @@ object SubFlowRepository {
 
     private val _selection = MutableStateFlow<SubFlowSelection?>(null)
     val selection: StateFlow<SubFlowSelection?> = _selection.asStateFlow()
+
+    private val _sourceLanguage = MutableStateFlow<String?>(null)
+    val sourceLanguage: StateFlow<String?> = _sourceLanguage.asStateFlow()
+
+    private val _liveSubtitleText = MutableStateFlow("")
+    val liveSubtitleText: StateFlow<String> = _liveSubtitleText.asStateFlow()
+
+    private val _cueState = MutableStateFlow<SubFlowCueState?>(null)
+    val cueState: StateFlow<SubFlowCueState?> = _cueState.asStateFlow()
+    private var cueRequestCounter = 0L
 
     val enabledNow: Boolean
         get() {
@@ -69,6 +80,70 @@ object SubFlowRepository {
     fun setNewWordColor(colorHex: String) = updatePreferences { copy(newWordColor = colorHex) }
 
     fun setLearningWordColor(colorHex: String) = updatePreferences { copy(learningWordColor = colorHex) }
+
+    fun setShowMeaning(show: Boolean) = updatePreferences { copy(showMeaning = show) }
+
+    fun setShowContext(show: Boolean) = updatePreferences { copy(showContext = show) }
+
+    fun setShowDefinition(show: Boolean) = updatePreferences { copy(showDefinition = show) }
+
+    fun setShowWordSpeaker(show: Boolean) = updatePreferences { copy(showWordSpeaker = show) }
+
+    fun setShowSentenceSpeaker(show: Boolean) = updatePreferences { copy(showSentenceSpeaker = show) }
+
+    fun setShowNavigation(show: Boolean) = updatePreferences { copy(showNavigation = show) }
+
+    fun setShowStatus(show: Boolean) = updatePreferences { copy(showStatus = show) }
+
+    fun setSourceLanguage(language: String?) {
+        _sourceLanguage.value = language?.trim()?.takeIf { it.isNotEmpty() }
+    }
+
+    fun setLiveSubtitleText(text: String) {
+        _liveSubtitleText.value = text
+    }
+
+    fun openCues(cues: List<SubFlowCue>, index: Int) {
+        if (cues.isEmpty()) {
+            _cueState.value = null
+            return
+        }
+        val safeIndex = index.coerceIn(0, cues.lastIndex)
+        _cueState.value = SubFlowCueState(
+            cues = cues,
+            index = safeIndex,
+            translation = null,
+            isLoading = true,
+        )
+        translateCue(cues, safeIndex)
+    }
+
+    fun previousCue() {
+        val state = _cueState.value ?: return
+        if (!state.canGoPrevious) return
+        val nextIndex = state.index - 1
+        _cueState.value = state.copy(index = nextIndex, translation = null, isLoading = true)
+        translateCue(state.cues, nextIndex)
+    }
+
+    fun nextCue() {
+        val state = _cueState.value ?: return
+        if (!state.canGoNext) return
+        val nextIndex = state.index + 1
+        _cueState.value = state.copy(index = nextIndex, translation = null, isLoading = true)
+        translateCue(state.cues, nextIndex)
+    }
+
+    fun speakCueText() {
+        val text = _cueState.value?.current?.text?.takeIf { it.isNotBlank() } ?: return
+        speakText(text)
+    }
+
+    fun speakText(text: String) {
+        if (text.isBlank()) return
+        val rate = _preferences.value.speechRate.coerceIn(20, 100) / 100f
+        SubFlowSpeech.speak(text, detectSpeechTag(text), rate)
+    }
 
     fun selectWord(word: String, context: String) {
         ensureLoaded()
@@ -157,6 +232,7 @@ object SubFlowRepository {
 
     fun closeCard() {
         _selection.value = null
+        _cueState.value = null
         SubFlowSpeech.stop()
     }
 
@@ -201,6 +277,7 @@ object SubFlowRepository {
         _words.value = _words.value + (key to entry)
         persistWords()
         _selection.value = null
+        _cueState.value = null
         SubFlowSpeech.stop()
     }
 
@@ -290,6 +367,17 @@ object SubFlowRepository {
     private fun detectSpeechTag(text: String): String {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return SubFlowSpeechTag(_preferences.value.targetLanguage)
+
+        val sourceCode = _sourceLanguage.value
+            ?.let(::normalizeLanguageCode)
+            ?.takeIf { it.isNotBlank() }
+        if (sourceCode != null) return SubFlowSpeechTag(sourceCode)
+
+        val detectedCode = SubFlowLanguageDetector.detect(trimmed)
+            ?.let(::normalizeLanguageCode)
+            ?.takeIf { it.isNotBlank() }
+        if (detectedCode != null) return SubFlowSpeechTag(detectedCode)
+
         val first = trimmed.first()
         return when {
             first in '\u0600'..'\u06FF' -> "ar-SA"
@@ -301,6 +389,20 @@ object SubFlowRepository {
             first in '\u4E00'..'\u9FFF' -> "zh-CN"
             first in '\u0E00'..'\u0E7F' -> "th-TH"
             else -> "en-US"
+        }
+    }
+
+    private fun translateCue(cues: List<SubFlowCue>, index: Int) {
+        val text = cues.getOrNull(index)?.text?.takeIf { it.isNotBlank() } ?: return
+        val requestId = ++cueRequestCounter
+        scope.launch {
+            val translated = runCatching {
+                SubFlowTranslationService.translate(text, _preferences.value.targetLanguage)
+            }.getOrNull()
+            if (cueRequestCounter != requestId) return@launch
+            val state = _cueState.value ?: return@launch
+            if (state.cues !== cues || state.index != index) return@launch
+            _cueState.value = state.copy(translation = translated, isLoading = false)
         }
     }
 }

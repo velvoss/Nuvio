@@ -6,6 +6,14 @@ internal val PlayerScreenRuntime.subtitleStyle: SubtitleStyleState
 internal val PlayerScreenRuntime.activeAddonSubtitleType: String
     get() = contentType ?: parentMetaType
 
+internal val PlayerScreenRuntime.activeSubtitleSourceLanguage: String?
+    get() = selectedAddonSubtitle?.language
+        ?.takeIf { it.isNotBlank() && !it.equals("unknown", ignoreCase = true) }
+        ?: subtitleTracks
+            .firstOrNull { it.index == selectedSubtitleIndex }
+            ?.language
+            ?.takeIf { it.isNotBlank() && !it.equals("unknown", ignoreCase = true) }
+
 internal val PlayerScreenRuntime.addonSubtitleFetchKey: String?
     get() = buildAddonSubtitleFetchKey(
         addons = addonsUiState.addons,

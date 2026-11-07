@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -59,10 +60,13 @@ internal fun StyledSubtitleOverlay(
     SubFlowRepository.ensureLoaded()
     val subFlowPreferences by SubFlowRepository.preferences.collectAsState()
     val subFlowWords by SubFlowRepository.words.collectAsState()
+    val subFlowSelection by SubFlowRepository.selection.collectAsState()
+    LaunchedEffect(text) { SubFlowRepository.setLiveSubtitleText(text) }
     val wordTapHandler: ((String, String) -> Unit)? =
         if (subFlowPreferences.enabled) SubFlowRepository::selectWord else null
     val fontFamily = rememberSubtitleFontFamily(style.appearance.fontId)
     if (text.isBlank()) return
+    if (subFlowSelection != null) return
     val density = LocalDensity.current
     BoxWithConstraints(modifier.fillMaxSize()) {
         val containerWidthPx = with(density) { maxWidth.toPx() }
@@ -91,6 +95,7 @@ internal fun StyledSubtitleOverlay(
                 onSubFlowWordTap = wordTapHandler,
                 subFlowPreferences = subFlowPreferences.takeIf { it.enabled },
                 subFlowWords = subFlowWords,
+                selectedWord = subFlowSelection?.word,
             )
         }
     }
@@ -108,6 +113,7 @@ internal fun StyledSubtitleText(
     onSubFlowWordTap: ((word: String, line: String) -> Unit)? = null,
     subFlowPreferences: SubFlowPreferences? = null,
     subFlowWords: Map<String, SubFlowWordEntry> = emptyMap(),
+    selectedWord: String? = null,
 ) {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
@@ -137,7 +143,7 @@ internal fun StyledSubtitleText(
         val edgePadding = with(density) { edgePaddingPx.toDp() }
 
         val availableTextWidth = (availableWidth - paddingX * 2).coerceAtLeast(1f).toInt()
-        val annotatedText = remember(text, subFlowPreferences, subFlowWords) {
+        val annotatedText = remember(text, subFlowPreferences, subFlowWords, selectedWord) {
             if (subFlowPreferences == null) {
                 AnnotatedString(text)
             } else {
@@ -146,8 +152,9 @@ internal fun StyledSubtitleText(
                 buildAnnotatedString {
                     append(text)
                     SubFlowText.wordRanges(text).forEach { range ->
-                        val status = subFlowWords[text.substring(range.first, range.last + 1).lowercase()]?.status
-                            ?: SubFlowWordStatus.New
+                        val wordText = text.substring(range.first, range.last + 1)
+                        val key = wordText.lowercase()
+                        val status = subFlowWords[key]?.status
                         val wordColor = when (status) {
                             SubFlowWordStatus.New -> newColor
                             SubFlowWordStatus.Learning -> learningColor
@@ -155,6 +162,13 @@ internal fun StyledSubtitleText(
                         }
                         if (wordColor != null) {
                             addStyle(SpanStyle(color = wordColor), range.first, range.last + 1)
+                        }
+                        if (selectedWord != null && key == selectedWord.lowercase()) {
+                            addStyle(
+                                SpanStyle(background = Color.White.copy(alpha = 0.22f)),
+                                range.first,
+                                range.last + 1,
+                            )
                         }
                     }
                 }
@@ -275,7 +289,7 @@ internal fun StyledSubtitleText(
             Canvas(Modifier.fillMaxSize()) {
                 drawText(
                     layout,
-                    color = if (subFlowPreferences != null) Color.Unspecified else style.textColor,
+                    color = Color.Unspecified,
                     topLeft = origin,
                     drawStyle = Fill,
                     shadow = if (style.appearance.shadowEnabled) {

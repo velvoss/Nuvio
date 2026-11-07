@@ -2582,4 +2582,13 @@
     <string name="subflow_import_success">تم استيراد الكلمات</string>
     <string name="subflow_import_failed">لا يوجد JSON صالح في الحافظة</string>
     <string name="subflow_import_empty">الحافظة فارغة</string>
+
+    <string name="subflow_settings_card_section">عناصر بطاقة الكلمة</string>
+    <string name="subflow_settings_show_meaning">إظهار المعنى</string>
+    <string name="subflow_settings_show_context">إظهار جملة السياق</string>
+    <string name="subflow_settings_show_definition">إظهار التعريف</string>
+    <string name="subflow_settings_show_word_speaker">إظهار زر نطق الكلمة</string>
+    <string name="subflow_settings_show_sentence_speaker">إظهار زر نطق الترجمة</string>
+    <string name="subflow_settings_show_navigation">إظهار السابق والتالي</string>
+    <string name="subflow_settings_show_status">إظهار حالة الكلمة</string>
 </resources>

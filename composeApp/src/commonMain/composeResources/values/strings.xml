@@ -3149,4 +3149,13 @@
     <string name="subflow_import_success">Words imported</string>
     <string name="subflow_import_failed">No valid JSON found in the clipboard</string>
     <string name="subflow_import_empty">Clipboard is empty</string>
+
+    <string name="subflow_settings_card_section">Word card elements</string>
+    <string name="subflow_settings_show_meaning">Show meaning</string>
+    <string name="subflow_settings_show_context">Show sentence context</string>
+    <string name="subflow_settings_show_definition">Show definition</string>
+    <string name="subflow_settings_show_word_speaker">Show word speaker</string>
+    <string name="subflow_settings_show_sentence_speaker">Show subtitle speaker</string>
+    <string name="subflow_settings_show_navigation">Show previous and next</string>
+    <string name="subflow_settings_show_status">Show word status</string>
 </resources>

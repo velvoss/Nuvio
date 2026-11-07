@@ -8,6 +8,7 @@ import com.nuvio.app.core.ui.NuvioToastController
 import com.nuvio.app.features.party.PartyRepository
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuvio.app.features.shuffle.EpisodeShuffleRepository
+import com.nuvio.app.features.subflow.SubFlowCue
 import com.nuvio.app.features.subflow.SubFlowRepository
 import com.nuvio.app.features.shuffle.ShuffleSurface
 import com.nuvio.app.features.shuffle.watchedShuffleEpisodes
@@ -81,6 +82,7 @@ private fun rememberNetworkCondition(): NetworkCondition {
 internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
     SubFlowRepository.ensureLoaded()
     val subFlowPreferences by SubFlowRepository.preferences.collectAsStateWithLifecycle()
+    val subFlowSelection by SubFlowRepository.selection.collectAsStateWithLifecycle()
     val networkCondition = rememberNetworkCondition()
     val currentFeedback = liveGestureFeedback ?: gestureFeedback
     LaunchedEffect(currentFeedback) {
@@ -251,6 +253,49 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
 
     LaunchedEffect(playerController, subtitleStyle, subFlowPreferences.enabled) {
         playerController?.applySubtitleStyle(subtitleStyle)
+    }
+
+    LaunchedEffect(activeSubtitleSourceLanguage) {
+        SubFlowRepository.setSourceLanguage(activeSubtitleSourceLanguage)
+    }
+
+    LaunchedEffect(subFlowSelection?.word) {
+        if (subFlowSelection == null) return@LaunchedEffect
+        SubFlowRepository.setSourceLanguage(activeSubtitleSourceLanguage)
+        if (selectedAddonSubtitle != null) {
+            loadSubtitleAutoSyncCues()
+        } else {
+            val text = SubFlowRepository.liveSubtitleText.value
+                .ifBlank { subFlowSelection?.context.orEmpty() }
+            if (text.isNotBlank()) {
+                SubFlowRepository.openCues(
+                    cues = listOf(SubFlowCue(text = text, startTimeMs = 0L, endTimeMs = Long.MAX_VALUE)),
+                    index = 0,
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(subtitleAutoSyncState.cues, subFlowSelection?.word) {
+        if (subFlowSelection == null) return@LaunchedEffect
+        val cues = subtitleAutoSyncState.cues
+        if (cues.isEmpty()) return@LaunchedEffect
+        val liveText = SubFlowRepository.liveSubtitleText.value.trim()
+        val positionMs = playbackSnapshot.positionMs
+        val textIndex = if (liveText.isNotBlank()) {
+            cues.indexOfFirst { it.text.trim() == liveText }
+        } else {
+            -1
+        }
+        val index = if (textIndex >= 0) {
+            textIndex
+        } else {
+            cues.indexOfLast { it.startTimeMs <= positionMs }.coerceAtLeast(0)
+        }
+        SubFlowRepository.openCues(
+            cues = cues.map { SubFlowCue(it.text, it.startTimeMs, it.endTimeMs) },
+            index = index,
+        )
     }
 
     // iOS recognises hardware keys in the mpv view controller, because its UIKit view can hold

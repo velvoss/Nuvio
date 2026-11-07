@@ -56,7 +56,6 @@ import nuvio.composeapp.generated.resources.subflow_card_definition
 import nuvio.composeapp.generated.resources.subflow_card_known
 import nuvio.composeapp.generated.resources.subflow_card_learning
 import nuvio.composeapp.generated.resources.subflow_card_no_meaning
-import nuvio.composeapp.generated.resources.subflow_speak_meaning
 import nuvio.composeapp.generated.resources.subflow_speak_word
 import nuvio.composeapp.generated.resources.subflow_status_known
 import nuvio.composeapp.generated.resources.subflow_status_learning
@@ -73,6 +72,7 @@ internal fun SubFlowWordCardOverlay(
     SubFlowRepository.ensureLoaded()
     val selection by SubFlowRepository.selection.collectAsState()
     val preferences by SubFlowRepository.preferences.collectAsState()
+    val cueState by SubFlowRepository.cueState.collectAsState()
     var lastSelection by remember { mutableStateOf<SubFlowSelection?>(null) }
     if (selection != null) lastSelection = selection
     var resumeOnClose by remember { mutableStateOf(false) }
@@ -103,6 +103,8 @@ internal fun SubFlowWordCardOverlay(
                 SubFlowWordCard(
                     selection = current,
                     preferences = preferences,
+                    cueText = cueState?.current?.text ?: current.context,
+                    cueTranslation = cueState?.translation ?: current.sentenceTranslation,
                     onClose = { SubFlowRepository.closeCard() },
                 )
             }
@@ -114,36 +116,57 @@ internal fun SubFlowWordCardOverlay(
 private fun SubFlowWordCard(
     selection: SubFlowSelection,
     preferences: SubFlowPreferences,
+    cueText: String,
+    cueTranslation: String?,
     onClose: () -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
     val entry = selection.entry
     val statusColor = subFlowStatusColor(entry.status, preferences)
     val meaning = entry.meaning?.takeIf { it.isNotBlank() }
+    val contextText = cueText.takeIf { it.isNotBlank() }
+    val translatedContext = cueTranslation?.takeIf { it.isNotBlank() }
 
     Surface(
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 16.dp)
-            .widthIn(max = 380.dp),
-        color = tokens.colors.surfaceDialog,
+            .widthIn(max = 430.dp),
+        color = tokens.colors.surfaceDialog.copy(alpha = 0.97f),
         contentColor = tokens.colors.textPrimary,
-        shape = tokens.shapes.dialog,
+        shape = RoundedCornerShape(28.dp),
         border = BorderStroke(tokens.borders.thin, tokens.colors.borderSubtle),
         tonalElevation = 6.dp,
-        shadowElevation = 12.dp,
+        shadowElevation = 16.dp,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = entry.word,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = tokens.colors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = entry.word,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = tokens.colors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        if (preferences.showWordSpeaker) {
+                            IconButton(
+                                onClick = SubFlowRepository::speakWord,
+                                modifier = Modifier.size(36.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.VolumeUp,
+                                    contentDescription = stringResource(Res.string.subflow_speak_word),
+                                    tint = tokens.colors.textPrimary,
+                                )
+                            }
+                        }
+                    }
                     val meta = listOfNotNull(
                         entry.phonetic?.takeIf { it.isNotBlank() },
                         entry.partOfSpeech?.takeIf { it.isNotBlank() },
@@ -156,8 +179,10 @@ private fun SubFlowWordCard(
                         )
                     }
                 }
-                SubFlowStatusBadge(status = entry.status, color = statusColor)
-                Spacer(modifier = Modifier.size(6.dp))
+                if (preferences.showStatus) {
+                    SubFlowStatusBadge(status = entry.status, color = statusColor)
+                }
+                Spacer(modifier = Modifier.size(4.dp))
                 IconButton(onClick = onClose) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
@@ -167,78 +192,64 @@ private fun SubFlowWordCard(
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                IconButton(onClick = SubFlowRepository::speakWord, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = Icons.Rounded.VolumeUp,
-                        contentDescription = stringResource(Res.string.subflow_speak_word),
-                        tint = tokens.colors.accent,
-                    )
-                }
-                if (meaning != null) {
-                    IconButton(onClick = SubFlowRepository::speakMeaning, modifier = Modifier.size(36.dp)) {
-                        Icon(
-                            imageVector = Icons.Rounded.VolumeUp,
-                            contentDescription = stringResource(Res.string.subflow_speak_meaning),
-                            tint = tokens.colors.accent,
-                        )
+            if (preferences.showMeaning) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (selection.isLoading && meaning == null) {
+                        NuvioLoadingIndicator(size = 18.dp)
                     }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                if (selection.isLoading && meaning == null) {
-                    NuvioLoadingIndicator(size = 18.dp)
-                }
-            }
-
-            Text(
-                text = meaning ?: if (selection.isLoading) {
-                    "…"
-                } else {
-                    stringResource(Res.string.subflow_card_no_meaning)
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (meaning != null) tokens.colors.textPrimary else tokens.colors.textMuted,
-                fontWeight = FontWeight.SemiBold,
-            )
-
-            entry.definition?.takeIf { it.isNotBlank() }?.let { definition ->
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = stringResource(Res.string.subflow_card_definition),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = tokens.colors.textMuted,
-                    )
-                    Text(
-                        text = definition,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = tokens.colors.textSecondary,
+                        text = meaning ?: if (selection.isLoading) {
+                            "…"
+                        } else {
+                            stringResource(Res.string.subflow_card_no_meaning)
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (meaning != null) tokens.colors.textPrimary else tokens.colors.textMuted,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
 
-            if (selection.context.isNotBlank() || !selection.sentenceTranslation.isNullOrBlank()) {
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            if (preferences.showContext && contextText != null) {
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text(
                         text = stringResource(Res.string.subflow_card_context),
                         style = MaterialTheme.typography.labelMedium,
                         color = tokens.colors.textMuted,
                     )
-                    if (selection.context.isNotBlank()) {
+                    Text(
+                        text = contextText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = tokens.colors.textSecondary,
+                        textAlign = TextAlign.Start,
+                    )
+                    if (translatedContext != null) {
                         Text(
-                            text = selection.context,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = tokens.colors.textSecondary,
-                            textAlign = TextAlign.Start,
-                        )
-                    }
-                    selection.sentenceTranslation?.takeIf { it.isNotBlank() }?.let { sentence ->
-                        Text(
-                            text = sentence,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "«$translatedContext»",
+                            style = MaterialTheme.typography.bodyLarge,
                             color = tokens.colors.textPrimary,
+                        )
+                    } else if (cueStateIsLoading()) {
+                        NuvioLoadingIndicator(size = 16.dp)
+                    }
+                }
+            }
+
+            if (preferences.showDefinition) {
+                entry.definition?.takeIf { it.isNotBlank() }?.let { definition ->
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(
+                            text = stringResource(Res.string.subflow_card_definition),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = tokens.colors.textMuted,
+                        )
+                        Text(
+                            text = definition,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = tokens.colors.textSecondary,
                         )
                     }
                 }
@@ -246,15 +257,15 @@ private fun SubFlowWordCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Button(
                     onClick = { SubFlowRepository.setStatus(SubFlowWordStatus.Learning) },
-                    modifier = Modifier.weight(1f).height(38.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = statusColor.copy(alpha = 0.18f),
-                        contentColor = statusColor,
+                        containerColor = tokens.colors.warning.copy(alpha = 0.22f),
+                        contentColor = tokens.colors.warning,
                     ),
                     contentPadding = PaddingValues(horizontal = 8.dp),
                 ) {
@@ -266,11 +277,11 @@ private fun SubFlowWordCard(
                 }
                 Button(
                     onClick = { SubFlowRepository.setStatus(SubFlowWordStatus.Known) },
-                    modifier = Modifier.weight(1f).height(38.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = tokens.colors.accent,
-                        contentColor = tokens.colors.onAccent,
+                        containerColor = Color.White,
+                        contentColor = Color.Black,
                     ),
                     contentPadding = PaddingValues(horizontal = 8.dp),
                 ) {
@@ -283,6 +294,12 @@ private fun SubFlowWordCard(
             }
         }
     }
+}
+
+@Composable
+private fun cueStateIsLoading(): Boolean {
+    val cueState by SubFlowRepository.cueState.collectAsState()
+    return cueState?.isLoading == true
 }
 
 @Composable
